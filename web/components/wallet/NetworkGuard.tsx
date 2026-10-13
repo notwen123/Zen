@@ -20,14 +20,26 @@ export function NetworkGuard({ children }: { children: ReactNode }) {
   const [switchError, setSwitchError] = useState(false);
 
   if (status === "connecting")
-    return <Panel title="Waiting for your passkey…" body="Approve the passkey prompt to derive your Monad account." quiet />;
+    return <Panel title="Waiting for your passkey…" body="Approve the prompt from your device. Nothing leaves it but a signature." quiet />;
 
   if (status !== "connected" && PUBLIC.some((p) => path === p || path.startsWith(p + "/"))) return <>{children}</>;
 
   if (status !== "connected")
     return (
-      <Panel title="Sign in to continue." body="Sign in with a passkey (Face ID, Touch ID, Windows Hello, a phone or a security key). Zen derives your Monad account from it: no seed phrase, no extension, no custody.">
+      <Panel title="Your rewards, sealed by a passkey." body="Sign in once with Face ID, Touch ID, Windows Hello or your phone. Zen creates your Monad account from that passkey.">
         <ConnectWallet />
+        <ul className="mt-10 grid gap-3 text-left text-sm text-charcoal">
+          {[
+            "No wallet app to install and no seed phrase to write down.",
+            "Works with Google Password Manager, iCloud Keychain and 1Password.",
+            "New accounts get free test MON, so every button works right away.",
+          ].map((t) => (
+            <li key={t} className="flex gap-3">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-vermilion" aria-hidden="true" />
+              {t}
+            </li>
+          ))}
+        </ul>
       </Panel>
     );
 

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useAccount } from "@/lib/account";
 import { usePools } from "@/components/hooks/useZen";
 import { PoolPanel, RiskDisclosure } from "@/components/lp/PoolPanel";
-import { Eyebrow } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 import { MarketTape } from "@/components/indexer/MarketTape";
 import { BrandMark } from "@/components/brand/BrandMark";
@@ -21,17 +21,9 @@ export default function LpTerminal() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <header className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <Eyebrow>LP terminal · Monad testnet</Eyebrow>
-          <h1 className="mt-3 font-display text-5xl font-bold leading-tight">Underwrite refund risk.</h1>
-          <p className="mt-3 max-w-xl text-charcoal">
-            Pools buy locked stock-back claims at a discount. Kept purchases pay the pool the full claim; refunded ones cost it what it paid. Every number is read live
-            from chain.
-          </p>
-        </div>
-        {!address && <ConnectWallet />}
-      </header>
+      <PageHeader title="Liquidity pools" action={!address ? <ConnectWallet /> : undefined}>
+        Pools buy locked rewards from shoppers at a discount. Kept purchases pay the pool in full; refunded ones cost it what it paid.
+      </PageHeader>
 
       <div className="mt-6">
         <RiskDisclosure />

@@ -119,7 +119,7 @@ export function LpActions({ p, address }: { p: PoolState; address: Address }) {
 
   return (
     <section aria-label={`Your ${asset} LP position`} className="border-t border-ink/15 pt-6">
-      <h4 className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">Your position</h4>
+      <h4 className="text-sm text-muted">Your position</h4>
       <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
         <Stat k={`Wallet ${asset}`} v={u ? fmt(u.equityBalance) : "—"} />
         <Stat k="LP shares" v={u ? Number(formatUnits(u.shares, 24)).toLocaleString("en-IN", { maximumFractionDigits: 4 }) : "—"} />
@@ -139,7 +139,7 @@ export function LpActions({ p, address }: { p: PoolState; address: Address }) {
         </p>
       )}
 
-      <div className="mt-6 flex gap-6 text-xs font-semibold uppercase tracking-[0.18em]">
+      <div className="mt-6 flex gap-6 text-sm font-semibold">
         {(["deposit", "withdraw"] as const).map((m) => (
           <button
             key={m}
@@ -176,7 +176,7 @@ export function LpActions({ p, address }: { p: PoolState; address: Address }) {
           <span className="px-2 font-mono text-xs text-muted">{asset}</span>
           <button
             type="button"
-            className="h-full border-l border-ink/20 px-4 py-3 font-mono text-xs uppercase tracking-[0.18em] hover:text-vermilion disabled:opacity-40"
+            className="h-full border-l border-ink/20 px-4 py-3 text-sm hover:text-vermilion disabled:opacity-40"
             disabled={max === 0n}
             onClick={() => setInput(formatUnits(max, 18))}
           >

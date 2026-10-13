@@ -1,5 +1,6 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAccount } from "@/lib/account";
 import { useClaims } from "@/components/hooks/useZen";
 import { useState } from "react";
@@ -20,7 +21,7 @@ const order = (a: LockedClaim, b: LockedClaim) => {
   if (la !== lb) return la ? -1 : 1;
   return la ? a.unlockAt - b.unlockAt : Number(b.id - a.id);
 };
-import { Empty, Muted, ScanLink } from "@/components/ownership/Ownership";
+import { Empty, ScanLink } from "@/components/ownership/Ownership";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 import { addressUrl } from "@/lib/chain";
 import { contracts } from "@/lib/contracts";
@@ -38,14 +39,11 @@ export default function Portfolio() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <Muted>Portfolio</Muted>
-      <h1 className="mt-3 font-display text-4xl font-bold sm:text-5xl">My locked equity</h1>
-      <p className="mt-3 max-w-2xl text-sm text-muted">
-        Every reward is a conditional claim on tokenized equity. It stays locked through the purchase&apos;s return window, because the purchase can
-        still be refunded. Wait for it to unlock and settle, or cash out now to the instant-exit pool at a discount.
-      </p>
+      <PageHeader title="My claims" action={<ScanLink label="Scan a receipt" />}>
+        Each reward stays locked while the purchase can still be returned. Wait for the seal to receive it in full, or cash out now at a discount.
+      </PageHeader>
 
-      <div className="mt-12">
+      <div className="mt-10">
         {!address ? (
           <Empty title="Connect your wallet." body="Your locked equity claims are read from Monad testnet for the connected wallet." cta={<ConnectWallet />} />
         ) : isLoading ? (
@@ -74,7 +72,7 @@ export default function Portfolio() {
                   role="tab"
                   aria-selected={filter === f.key}
                   onClick={() => (setFilter(f.key), setLimit(6))}
-                  className={`border px-3 py-1.5 font-mono text-xs uppercase tracking-[0.14em] transition-colors ${filter === f.key ? "border-ink bg-ink text-paper" : "border-ink/20 text-charcoal hover:border-ink/50"}`}
+                  className={`border px-3 py-1.5 text-sm transition-colors ${filter === f.key ? "border-ink bg-ink text-paper" : "border-ink/20 text-charcoal hover:border-ink/50"}`}
                 >
                   {f.label} <span className="opacity-60">{counts[f.key]}</span>
                 </button>
@@ -88,7 +86,7 @@ export default function Portfolio() {
                   ))}
                 </div>
                 {shown.length > limit && (
-                  <button type="button" onClick={() => setLimit((l) => l + 6)} className="mt-6 font-mono text-xs uppercase tracking-[0.16em] text-ink underline decoration-vermilion underline-offset-4">
+                  <button type="button" onClick={() => setLimit((l) => l + 6)} className="mt-6 text-sm text-ink underline decoration-vermilion underline-offset-4">
                     Show more ({shown.length - limit})
                   </button>
                 )}

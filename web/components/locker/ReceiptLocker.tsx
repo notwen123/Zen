@@ -1,5 +1,6 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useCallback, useEffect, useState } from "react";
 import { LOCKER_INFO, usePasskeyAccount } from "@/lib/account";
 import { importEntries, listEntries, open, removeEntry, type LockerEntry, type LockerPlain } from "@/lib/locker";
@@ -46,20 +47,23 @@ export function ReceiptLocker() {
 
   return (
     <div className="mx-auto max-w-4xl">
-      <p className="font-mono text-xs uppercase tracking-[0.2em] text-muted">Receipt Locker · encrypted on this device</p>
-      <h1 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Only your passkey opens it.</h1>
-      <p className="mt-4 max-w-2xl text-charcoal">
-        Every merchant receipt you scan and every claim proof you mint is sealed here with AES-256-GCM. The key is derived from your
-        passkey&apos;s PRF output with HKDF (<span className="font-mono text-sm">{LOCKER_INFO}</span>), separately from the key that signs your
-        transactions, and it never leaves the browser&apos;s crypto engine. Keep these to back a refund dispute, or export the encrypted backup and
-        re-open it on a new device by signing in with the same passkey.
-      </p>
+      <PageHeader title="Receipt locker">
+        Your receipts and claim proofs, encrypted on this device. Only your passkey can open them, here or on a new device after you import a backup.
+      </PageHeader>
+      <details className="mt-4 text-sm text-muted">
+        <summary className="cursor-pointer hover:text-ink">How the encryption works</summary>
+        <p className="mt-2 max-w-2xl leading-relaxed">
+          Each entry is sealed with AES-256-GCM. The key comes from your passkey&apos;s PRF output through HKDF (<span className="font-mono text-xs">{LOCKER_INFO}</span>),
+          separately from the key that signs your transactions, and it never leaves the browser&apos;s crypto engine. Keep these to back a refund dispute or to
+          re-prove a purchase.
+        </p>
+      </details>
 
       <div className="mt-6 flex flex-wrap gap-3">
-        <button type="button" onClick={exportBackup} disabled={!entries.length} className="border border-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] disabled:opacity-40">
+        <button type="button" onClick={exportBackup} disabled={!entries.length} className="border border-ink px-4 py-2 text-sm font-semibold disabled:opacity-40">
           Export encrypted backup
         </button>
-        <label className="cursor-pointer border border-ink/40 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em]">
+        <label className="cursor-pointer border border-ink/40 px-4 py-2 text-sm font-semibold">
           Import backup
           <input type="file" accept="application/json" className="sr-only" onChange={(e) => e.target.files?.[0] && importBackup(e.target.files[0])} />
         </label>
@@ -74,18 +78,18 @@ export function ReceiptLocker() {
             <li key={e.id} className="py-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.14em] text-muted">
+                  <p className="text-sm text-muted">
                     {e.kind === "receipt" ? "Signed receipt" : "Claim proof"} · {new Date(e.createdAt).toLocaleString()}
                   </p>
                   <p className="mt-1 font-medium">{o && o !== "error" ? o.title : "Sealed · " + e.ct.length + " bytes of ciphertext"}</p>
                 </div>
                 <div className="flex gap-2">
                   {!o && (
-                    <button type="button" onClick={() => reveal(e)} disabled={!lockerKey} className="bg-ink px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-paper disabled:opacity-40">
+                    <button type="button" onClick={() => reveal(e)} disabled={!lockerKey} className="bg-ink px-3 py-1.5 text-sm font-semibold text-paper disabled:opacity-40">
                       Open with passkey key
                     </button>
                   )}
-                  <button type="button" onClick={() => removeEntry(e.id).then(refresh)} className="border border-ink/30 px-3 py-1.5 text-xs uppercase tracking-[0.12em]">
+                  <button type="button" onClick={() => removeEntry(e.id).then(refresh)} className="border border-ink/30 px-3 py-1.5 text-sm">
                     Delete
                   </button>
                 </div>

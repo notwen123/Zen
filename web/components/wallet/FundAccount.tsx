@@ -5,7 +5,7 @@ import { refreshAfterTx } from "@/lib/refresh";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { formatEther, parseEther } from "viem";
-import { usePasskeyAccount } from "@/lib/account";
+import { fundedRecently, markFunded, usePasskeyAccount } from "@/lib/account";
 import { FAUCET_DRIP_MON, FAUCET_URL, txUrl } from "@/lib/chain";
 import { publicClient } from "@/lib/zen";
 
@@ -16,7 +16,7 @@ export function FundAccount({ compact = false }: { compact?: boolean }) {
   const bal = useQuery({ queryKey: ["mon", address], queryFn: () => publicClient.getBalance({ address: address! }), enabled: !!address, refetchInterval: 15_000 });
   const [state, setState] = useState<{ busy?: boolean; msg?: string; hash?: string }>({});
   if (!address) return null;
-  const low = bal.data !== undefined && bal.data < parseEther(FAUCET_DRIP_MON) / 2n;
+  const low = bal.data !== undefined && bal.data < parseEther(FAUCET_DRIP_MON) / 2n && !fundedRecently(address);
 
   async function fund() {
     setState({ busy: true });
@@ -26,6 +26,7 @@ export function FundAccount({ compact = false }: { compact?: boolean }) {
       if (!r.ok) return setState({ msg: body.error });
       await publicClient.waitForTransactionReceipt({ hash: body.hash });
       refreshAfterTx(qc, ["mon"]);
+      if (address) markFunded(address);
       setState({ msg: `Sent ${body.amount} test MON.`, hash: body.hash });
     } catch (e) {
       setState({ msg: e instanceof Error ? e.message : String(e) });

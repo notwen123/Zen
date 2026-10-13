@@ -9,18 +9,31 @@ import { TestnetSeal, Wordmark } from "@/components/art/Art";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
 import { shortAddress } from "@/lib/zen";
 
-const NAV = [
-  { href: "/app/dashboard", label: "Dashboard", icon: "M3 11 12 3l9 8v10h-6v-6H9v6H3z" },
-  { href: "/app/scan", label: "Scan receipt", icon: "M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M7 12h10" },
-  { href: "/app/portfolio", label: "Locked equity", icon: "M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z" },
-  { href: "/app/locker", label: "Receipt Locker", icon: "M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4M12 15v2" },
-  { href: "/app/lp", label: "LP terminal", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
-  { href: "/app/activity", label: "Activity", icon: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" },
-  { href: "/app/brands", label: "Brands", icon: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" },
-  { href: "/how-it-works", label: "How it works", icon: "M9 9a3 3 0 1 1 4 2.8c-.6.3-1 .9-1 1.6V14M12 18h.01" },
-  { href: "/app/settings", label: "Settings", icon: "M4 7h10M18 7h2M4 17h4M12 17h8M14 5v4M8 15v4" },
+type Item = { href: string; label: string; icon: string };
+const GROUPS: { title: string; items: Item[] }[] = [
+  {
+    title: "You",
+    items: [
+      { href: "/app/dashboard", label: "Home", icon: "M3 11 12 3l9 8v10h-6v-6H9v6H3z" },
+      { href: "/app/scan", label: "Scan a receipt", icon: "M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M7 12h10" },
+      { href: "/app/portfolio", label: "My claims", icon: "M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z" },
+      { href: "/app/locker", label: "Receipt locker", icon: "M4 7h16v13H4zM4 7l2-3h12l2 3M10 11h4" },
+    ],
+  },
+  {
+    title: "Market",
+    items: [
+      { href: "/app/lp", label: "Liquidity pools", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
+      { href: "/app/activity", label: "Activity", icon: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" },
+    ],
+  },
 ];
-const MOBILE = NAV.slice(0, 4);
+const HELP: Item[] = [
+  { href: "/how-it-works", label: "How it works", icon: "" },
+  { href: "/app/brands", label: "Brands", icon: "" },
+  { href: "/app/settings", label: "Settings", icon: "" },
+];
+const MOBILE = [GROUPS[0].items[0], GROUPS[0].items[1], GROUPS[0].items[2], GROUPS[1].items[0]];
 
 function Icon({ d }: { d: string }) {
   return (
@@ -41,33 +54,52 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Link href="/" aria-label="Zen home">
           <Wordmark />
         </Link>
-        <nav className="mt-14 flex-1">
-          <ul className="space-y-1">
-            {NAV.map((n) => (
+        <nav className="mt-12 flex-1 space-y-7">
+          {GROUPS.map((g) => (
+            <div key={g.title}>
+              <p className="px-3 text-xs text-muted">{g.title}</p>
+              <ul className="mt-2 space-y-0.5">
+                {g.items.map((n) => (
+                  <li key={n.href}>
+                    <Link
+                      href={n.href}
+                      aria-current={active(n.href) ? "page" : undefined}
+                      className={`group flex items-center gap-3 px-3 py-2.5 text-sm transition-colors duration-200 ${
+                        active(n.href) ? "bg-ink text-paper" : "text-charcoal hover:bg-paper-dark"
+                      }`}
+                    >
+                      <Icon d={n.icon} />
+                      {n.label}
+                      {active(n.href) && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+          <ul className="flex flex-wrap gap-x-4 gap-y-1 px-3 text-xs text-muted">
+            {HELP.map((n) => (
               <li key={n.href}>
-                <Link
-                  href={n.href}
-                  aria-current={active(n.href) ? "page" : undefined}
-                  className={`group flex items-center gap-3 px-3 py-2.5 text-sm transition-colors duration-200 ${
-                    active(n.href) ? "bg-ink text-paper" : "text-charcoal hover:bg-paper-dark"
-                  }`}
-                >
-                  <Icon d={n.icon} />
+                <Link href={n.href} aria-current={active(n.href) ? "page" : undefined} className={`hover:text-ink ${active(n.href) ? "text-ink underline decoration-vermilion underline-offset-4" : ""}`}>
                   {n.label}
-                  {active(n.href) && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />}
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
-        <div className="space-y-3 border-t border-ink/10 pt-5 text-xs">
-          <p className="font-mono uppercase tracking-[0.2em] text-muted">Passkey account</p>
-          <p className="font-mono text-sm">{address ? shortAddress(address) : "Not signed in"}</p>
-          <FundAccount compact />
-          <p className="flex items-center gap-2 text-muted">
-            <span className="h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />
-            Monad Testnet
-          </p>
+        <div className="space-y-2 border-t border-ink/10 pt-5 text-xs">
+          {address ? (
+            <>
+              <p className="flex items-center gap-2 text-muted">
+                <span className="h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />
+                Signed in with passkey · Monad testnet
+              </p>
+              <p className="font-mono text-sm">{shortAddress(address)}</p>
+              <FundAccount compact />
+            </>
+          ) : (
+            <p className="text-muted">Not signed in. Your account is created from a passkey: no wallet app or seed phrase.</p>
+          )}
         </div>
       </aside>
 
@@ -101,7 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className={`flex min-h-16 flex-col items-center justify-center gap-1 text-[0.68rem] font-medium ${active(n.href) ? "text-vermilion-deep" : "text-charcoal"}`}
               >
                 <Icon d={n.icon} />
-                {n.label.split(" ")[0]}
+                {n.label.replace("Scan a receipt", "Scan").replace("Liquidity pools", "Pools")}
               </Link>
             </li>
           ))}

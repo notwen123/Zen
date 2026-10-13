@@ -7,33 +7,35 @@ import { shortAddress } from "@/lib/zen";
 
 const noop = () => () => {};
 
-/** Passkey sign-in (Mera): create a passkey once, reuse it everywhere. No seed phrase, no extension. */
-export function ConnectWallet({ label = "Sign in with passkey", className }: { label?: string; className?: string }) {
+/**
+ * One obvious action. A device that has used Zen before gets "Unlock with passkey"; a new visitor gets
+ * "Create your account". The other path is a quiet link, not a second button of equal weight.
+ */
+export function ConnectWallet({ className }: { label?: string; className?: string }) {
   const { status, address, hasCredential, signIn, signUp, error } = usePasskeyAccount();
   const mounted = useSyncExternalStore(noop, () => true, () => false);
-  const cls = `ink-btn inline-flex min-h-10 items-center gap-2.5 px-4 py-2 text-[0.75rem] font-semibold uppercase tracking-[0.16em] ${className ?? ""}`;
-  if (!mounted) return <span className={`${cls} invisible`} aria-hidden="true">{label}</span>;
+  const cls = `ink-btn inline-flex min-h-11 items-center gap-2.5 px-5 py-2.5 text-sm font-semibold ${className ?? ""}`;
+  if (!mounted) return <span className={`${cls} invisible`} aria-hidden="true">Sign in</span>;
   if (status === "connected" && address)
     return (
       <Link href="/app/dashboard" className={`${cls} border border-ink/70 text-ink hover:text-paper`} aria-label={`Open Zen app, signed in as ${address}`}>
         <span className="h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />
-        <span className="font-mono normal-case tracking-normal">{shortAddress(address)}</span>
+        <span className="font-mono">{shortAddress(address)}</span>
       </Link>
     );
+  const busy = status === "connecting";
   return (
     <span className="inline-flex flex-col items-start gap-2">
-      <span className="inline-flex flex-wrap gap-2">
-        <button type="button" disabled={status === "connecting"} onClick={() => void (hasCredential ? signIn() : signUp())} className={`${cls} bg-ink text-paper`}>
-          {status === "connecting" ? "Waiting for passkey…" : hasCredential ? label : "Create passkey account"}
+      <button type="button" disabled={busy} onClick={() => void (hasCredential ? signIn() : signUp())} className={`${cls} bg-ink text-paper disabled:opacity-60`}>
+        {busy ? "Waiting for your passkey…" : hasCredential ? "Unlock with passkey" : "Create your account"}
+      </button>
+      {!busy && (
+        <button type="button" onClick={() => void (hasCredential ? signUp() : signIn())} className="text-xs text-muted underline decoration-ink/30 underline-offset-4 hover:text-ink">
+          {hasCredential ? "Use a new passkey instead" : "I already have a Zen passkey"}
         </button>
-        {status !== "connecting" && (
-          <button type="button" onClick={() => void (hasCredential ? signUp() : signIn())} className={`${cls} border border-ink/40 text-ink`}>
-            {hasCredential ? "New passkey" : "I have a passkey"}
-          </button>
-        )}
-      </span>
+      )}
       {error && (
-        <span role="alert" className="max-w-md text-xs normal-case tracking-normal text-vermilion-deep">
+        <span role="alert" className="max-w-sm text-xs text-vermilion-deep">
           {error}
         </span>
       )}

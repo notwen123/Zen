@@ -23,8 +23,8 @@ export function MarketTape({ account, title = "Market tape", limit: initial = 25
   return (
     <section className="border border-ink/15 bg-paper/60 p-5" aria-label={title}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-mono text-xs uppercase tracking-[0.18em] text-muted">{title}</p>
-        <p className="font-mono text-[0.7rem] uppercase tracking-[0.14em] text-muted">
+        <p className="text-sm text-muted">{title}</p>
+        <p className="text-xs text-muted">
           {q.isError ? "Envio indexer offline · showing contract state elsewhere" : "Indexed by Envio HyperIndex · Monad testnet"}
         </p>
       </div>
@@ -62,7 +62,7 @@ export function MarketTape({ account, title = "Market tape", limit: initial = 25
         </ol>
       )}
       {more && q.data && q.data.length > limit && (
-        <button type="button" onClick={() => setLimit((l) => l + 15)} className="mt-3 font-mono text-xs uppercase tracking-[0.16em] text-ink underline decoration-vermilion underline-offset-4">
+        <button type="button" onClick={() => setLimit((l) => l + 15)} className="mt-3 text-sm text-ink underline decoration-vermilion underline-offset-4">
           Show more
         </button>
       )}

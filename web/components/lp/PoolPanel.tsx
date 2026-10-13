@@ -79,10 +79,10 @@ export function RiskDisclosure() {
     <details aria-labelledby="risk-title" className="group border-l-4 border-vermilion bg-[#FBF8F1] px-5 py-4">
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
         <span id="risk-title" className="text-sm text-charcoal">
-          <b className="font-mono text-xs uppercase tracking-[0.2em] text-vermilion-deep">Risk · </b>
+          <b className="text-vermilion-deep">Risk: </b>
           Testnet mock assets. LPs lose the full price paid on every refunded claim, and capital in held claims can&apos;t be withdrawn until they resolve.
         </span>
-        <span className="font-mono text-xs uppercase tracking-[0.16em] text-vermilion-deep">
+        <span className="text-sm text-vermilion-deep">
           <span className="group-open:hidden">Read all 7 risks ↓</span>
           <span className="hidden group-open:inline">Hide ↑</span>
         </span>
@@ -208,7 +208,7 @@ export function PoolPanel({ p, address }: { p: PoolState; address?: Address }) {
       </div>
 
       <details className="group mt-8 border-t border-ink/15 pt-5">
-        <summary className="flex cursor-pointer list-none items-center justify-between font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted hover:text-ink">
+        <summary className="flex cursor-pointer list-none items-center justify-between text-sm text-muted hover:text-ink">
           How this pool prices claims · APR model and assumptions
           <span className="group-open:rotate-180 transition-transform" aria-hidden="true">↓</span>
         </summary>
@@ -229,7 +229,7 @@ function Params({ p }: { p: PoolState }) {
   const win = useReturnWindow(p.category.category);
   return (
     <section aria-label="Pricing parameters">
-      <h4 className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">Pricing parameters (onchain)</h4>
+      <h4 className="text-sm text-muted">Pricing parameters (onchain)</h4>
       <dl className="mt-4 divide-y divide-ink/10 text-sm">
         <Row k={`Refund probability · ${CATEGORY_LABEL[p.category.category]}`} v={bps(p.category.pRefundBps)} note="Illustrative demo parameter set by the demo admin." />
         <Row k="Minimum hold before sale" v={duration(p.category.minHoldSeconds)} />
@@ -259,7 +259,7 @@ function Model({ p, utilization }: { p: PoolState; utilization: number }) {
   const a = p.brand.asset;
   return (
     <section aria-label="Expected return model">
-      <h4 className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">Expected APR · model, not a promise</h4>
+      <h4 className="text-sm text-muted">Expected APR · model, not a promise</h4>
       <p className="mt-3 text-xs leading-relaxed text-charcoal">
         Reference claim with face 1 {a} from a clean wallet (risk 1×), bought at mint with T = {duration(T)} to unlock (the production return window for{" "}
         {CATEGORY_LABEL[p.category.category].toLowerCase()}), assuming the realized refund rate equals p = {pct(m.p)}.
@@ -301,7 +301,7 @@ function ClaimsTable({ p }: { p: PoolState }) {
   const a = p.brand.asset;
   return (
     <section aria-label={`Claims held by the ${a} pool`}>
-      <h4 className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">Claims bought by this pool</h4>
+      <h4 className="text-sm text-muted">Claims bought by this pool</h4>
       {claims.isLoading ? (
         <p className="breathe mt-4 text-sm text-muted">Reading claims from chain…</p>
       ) : claims.isError ? (
@@ -311,7 +311,7 @@ function ClaimsTable({ p }: { p: PoolState }) {
       ) : (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full min-w-[640px] text-left text-sm">
-            <thead className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted">
+            <thead className="text-xs text-muted">
               <tr className="border-b border-ink/20">
                 <th className="py-2 pr-4 font-normal">Claim</th>
                 <th className="py-2 pr-4 font-normal">Original claimant</th>
@@ -328,7 +328,7 @@ function ClaimsTable({ p }: { p: PoolState }) {
             </tbody>
           </table>
           {all.length > rows.length && (
-            <button type="button" onClick={() => setLimit((l) => l + 10)} className="mt-3 font-mono text-xs uppercase tracking-[0.16em] text-ink underline decoration-vermilion underline-offset-4">
+            <button type="button" onClick={() => setLimit((l) => l + 10)} className="mt-3 text-sm text-ink underline decoration-vermilion underline-offset-4">
               Show more ({all.length - rows.length} older)
             </button>
           )}
@@ -384,7 +384,7 @@ function SettleButton({ id }: { id: bigint }) {
   return (
     <div>
       <span>unlocked · awaiting settlement </span>
-      <button className="ink-link font-semibold uppercase tracking-[0.12em] disabled:opacity-40" disabled={tx.busy} onClick={() => tx.send(settleRequest(id), `Settle #${id}`)}>
+      <button className="ink-link font-semibold disabled:opacity-40" disabled={tx.busy} onClick={() => tx.send(settleRequest(id), `Settle #${id}`)}>
         {tx.busy ? "settling…" : "settle"}
       </button>
       <TxStatus tx={tx} />

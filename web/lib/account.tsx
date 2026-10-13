@@ -33,6 +33,21 @@ const CREDENTIAL_KEY = "zen.passkey";
 const IDLE_MS = 30 * 60_000;
 export const LOCKER_INFO = "zen-receipt-locker-v1";
 
+/** The faucet funds an address once a day; remember it so the UI doesn't offer a drip that would be refused. */
+const FUNDED = (a: string) => `zen.funded.${a.toLowerCase()}`;
+export function markFunded(a: string) {
+  try {
+    localStorage.setItem(FUNDED(a), String(Date.now()));
+  } catch {}
+}
+export function fundedRecently(a: string) {
+  try {
+    return Date.now() - Number(localStorage.getItem(FUNDED(a)) ?? 0) < 24 * 60 * 60_000;
+  } catch {
+    return false;
+  }
+}
+
 type Status = "disconnected" | "connecting" | "connected";
 type Ctx = {
   status: Status;
@@ -147,9 +162,20 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     [open],
   );
 
+  const fresh = useRef(false);
+  // A brand-new account starts with 0 MON: ask the testnet faucet once, so every button works right away.
+  useEffect(() => {
+    if (!account || !fresh.current) return;
+    fresh.current = false;
+    void fetch("/api/faucet", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ address: account.address }) })
+      .then((r) => r.ok && markFunded(account.address))
+      .catch(() => {});
+  }, [account]);
+
   const signUp = useCallback(
     () =>
       run(async () => {
+        fresh.current = true;
         const created = await createPasskeyWithPrfOutput({
           rp: { id: location.hostname, name: "Zen" },
           user: { name: `zen-${new Date().toISOString().slice(0, 10)}`, displayName: "Zen account" },

@@ -8,7 +8,7 @@ const styles: Record<Variant, string> = {
   quiet: "text-ink ink-link",
 };
 const base =
-  "inline-flex min-h-11 items-center justify-center gap-3 px-6 py-3 text-[0.8rem] font-semibold uppercase tracking-[0.18em] disabled:cursor-not-allowed disabled:opacity-45";
+  "inline-flex min-h-11 items-center justify-center gap-3 px-6 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-45";
 
 export function Button({ variant = "ink", className, ...p }: ComponentProps<"button"> & { variant?: Variant }) {
   return <button {...p} className={`${variant === "quiet" ? "" : base} ${styles[variant]} ${className ?? ""}`} />;

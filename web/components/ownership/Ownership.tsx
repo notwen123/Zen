@@ -9,7 +9,7 @@ import { contracts } from "@/lib/contracts";
 import type { ActivityItem } from "@/lib/zen";
 
 export function Muted({ children }: { children: ReactNode }) {
-  return <p className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">{children}</p>;
+  return <p className="text-sm text-muted">{children}</p>;
 }
 
 function dayLabel(ts: number) {
@@ -79,7 +79,7 @@ export function Empty({ title, body, cta }: { title: string; body: string; cta?:
 }
 
 export const ScanLink = ({ label = "Scan a receipt" }: { label?: string }) => (
-  <Link href="/app/scan" className="ink-btn inline-flex min-h-11 items-center gap-3 bg-ink px-6 py-3 text-[0.8rem] font-semibold uppercase tracking-[0.18em] text-paper">
-    {label} <span aria-hidden="true">→</span>
+  <Link href="/app/scan" className="ink-btn inline-flex min-h-11 items-center gap-3 bg-ink px-6 py-3 text-sm font-semibold text-paper">
+    {label}
   </Link>
 );

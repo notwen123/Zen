@@ -1,6 +1,7 @@
 "use client";
 
 import { refreshAfterTx } from "@/lib/refresh";
+import { SealProgress } from "@/components/claims/SealProgress";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -77,7 +78,7 @@ const DemoBadge = () => (
   </span>
 );
 
-const eyebrow = "font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted";
+const eyebrow = "text-sm text-muted";
 
 // ------------------------------------------------------------------ summary
 
@@ -208,8 +209,8 @@ export function ClaimCard({ c, now }: { c: LockedClaim; now: number }) {
         <div className="flex items-center gap-4">
           {c.brand && <BrandMark brand={c.brand} className="h-10 w-14" />}
           <div>
-            <h3 id={`claim-${c.id}`} className="font-display text-2xl font-extrabold tracking-[0.04em]">
-              {c.brand?.name.toUpperCase() ?? "UNKNOWN BRAND"}
+            <h3 id={`claim-${c.id}`} className="font-display text-2xl font-bold">
+              {c.brand?.name ?? "Unknown brand"}
             </h3>
             <p className="mt-0.5 text-xs text-muted">
               Claim #{c.id.toString()} · {CATEGORY_LABEL[c.category] ?? `Category ${c.category}`}
@@ -242,6 +243,8 @@ export function ClaimCard({ c, now }: { c: LockedClaim; now: number }) {
           `Settled. The ${asset} was released to the holder.`
         )}
       </p>
+
+      <SealProgress start={c.mintedAt} end={c.unlockAt} now={now} state={state} />
 
       {canAct && left > 0 && <CashOutQuote c={c} now={now} />}
 

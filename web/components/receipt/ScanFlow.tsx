@@ -1,5 +1,6 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PageHeader";
 import { refreshAfterTx } from "@/lib/refresh";
 
 import { hexToString } from "viem";
@@ -14,7 +15,7 @@ import { Stamp } from "@/components/art/Art";
 import { fmtTime, fmtUnits } from "@/components/claims/LockedEquity";
 import { useVerifier } from "@/components/hooks/useZen";
 import { VerificationPipeline } from "@/components/protocol/VerificationPipeline";
-import { Arrow, Button, ButtonLink, Eyebrow } from "@/components/ui/Button";
+import { Arrow, Button, ButtonLink } from "@/components/ui/Button";
 import { BRANDS, brandById } from "@/lib/brands";
 import { FAUCET_URL } from "@/lib/chain";
 import { EVIDENCE, type Evidence } from "@/lib/evidence";
@@ -221,13 +222,9 @@ export function ScanFlow() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Eyebrow>Scan · Prove · Own</Eyebrow>
-          <h1 className="mt-3 font-display text-4xl font-bold sm:text-5xl">Scan receipt</h1>
-        </div>
-        <span className="border border-ink/20 px-2 py-1 font-mono text-[0.62rem] uppercase tracking-[0.18em] text-muted">Demo attestation</span>
-      </header>
+      <PageHeader title="Scan a receipt">
+        Scan the QR on a merchant-signed receipt. Zen checks the signature, then locks your reward until the return window closes. Demo merchant.
+      </PageHeader>
 
       <input ref={cameraRef} type="file" accept="image/*" capture="environment" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => onFile(e.target.files?.[0])} />
       <input ref={uploadRef} type="file" accept="image/*" className="sr-only" tabIndex={-1} aria-hidden="true" onChange={(e) => onFile(e.target.files?.[0])} />
