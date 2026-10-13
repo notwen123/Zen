@@ -1,5 +1,7 @@
 "use client";
 
+import { refreshAfterTx } from "@/lib/refresh";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { Address, Hex } from "viem";
@@ -170,7 +172,7 @@ export function ClaimCard({ c, now }: { c: LockedClaim; now: number }) {
   }
 
   const refresh = () =>
-    Promise.all(["claims", "activity", "pools", "poolClaims"].map((k) => qc.invalidateQueries({ queryKey: [k], refetchType: "all" }))).catch(() => {});
+    refreshAfterTx(qc);
 
   async function cashOut() {
     if (!pool) return;

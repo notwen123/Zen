@@ -4,6 +4,7 @@ import { useAccount } from "@/lib/account";
 import { usePools } from "@/components/hooks/useZen";
 import { PoolPanel, RiskDisclosure } from "@/components/lp/PoolPanel";
 import { Eyebrow } from "@/components/ui/Button";
+import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 
 export default function LpTerminal() {
   const { address } = useAccount();
@@ -20,6 +21,13 @@ export default function LpTerminal() {
           the first onchain market that prices consumer refund risk. Every number below is read live from chain.
         </p>
       </header>
+
+      {!address && (
+        <div className="mt-8 flex flex-wrap items-center gap-4 border border-ink/15 p-5">
+          <p className="max-w-md text-sm text-charcoal">Browsing is public. To deposit or withdraw as an LP, sign in with your passkey.</p>
+          <ConnectWallet />
+        </div>
+      )}
 
       <div className="mt-10">
         <RiskDisclosure />

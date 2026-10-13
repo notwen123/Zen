@@ -1,5 +1,7 @@
 "use client";
 
+import { refreshAfterTx } from "@/lib/refresh";
+
 import { useConnectModal } from "@/lib/account";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -48,8 +50,7 @@ export function RefundDesk() {
       const rc = await publicClient.waitForTransactionReceipt({ hash });
       if (rc.status !== "success") throw new Error("The void transaction reverted.");
       setJob({ id, s: "done", hash });
-      qc.invalidateQueries({ queryKey: ["claims"] });
-      qc.invalidateQueries({ queryKey: ["pools"] });
+      refreshAfterTx(qc);
     } catch (e) {
       const err = classifyClaimError(e);
       const msg = err.kind === "rejected" ? "You declined the transaction." : err.kind === "funds" ? "Your wallet needs testnet MON for gas." : err.kind === "other" ? err.detail : "The void was rejected.";

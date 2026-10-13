@@ -1,5 +1,7 @@
 "use client";
 
+import { refreshAfterTx } from "@/lib/refresh";
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { formatEther, parseEther } from "viem";
@@ -23,7 +25,7 @@ export function FundAccount({ compact = false }: { compact?: boolean }) {
       const body = await r.json();
       if (!r.ok) return setState({ msg: body.error });
       await publicClient.waitForTransactionReceipt({ hash: body.hash });
-      await qc.invalidateQueries({ queryKey: ["mon", address] });
+      refreshAfterTx(qc, ["mon"]);
       setState({ msg: `Sent ${body.amount} test MON.`, hash: body.hash });
     } catch (e) {
       setState({ msg: e instanceof Error ? e.message : String(e) });

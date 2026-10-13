@@ -1,6 +1,6 @@
 "use client";
 
-import { useConnectModal } from "@/lib/account";
+
 import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { useAccount, useSwitchChain } from "@/lib/account";

@@ -1,5 +1,7 @@
 "use client";
 
+import { refreshAfterTx } from "@/lib/refresh";
+
 import { hexToString } from "viem";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
@@ -204,6 +206,7 @@ export function ScanFlow() {
         qc.invalidateQueries({ queryKey: ["claims"], refetchType: "all" }),
         qc.invalidateQueries({ queryKey: ["activity"], refetchType: "all" }),
         qc.invalidateQueries({ queryKey: ["pools"], refetchType: "all" }),
+        Promise.resolve(refreshAfterTx(qc)),
       ]).catch(() => {});
       // Receipt Locker: the full claim proof (attested claim + signature + tx), for disputes or re-proving later.
       void trySeal(lockerKey, "claim-proof", {

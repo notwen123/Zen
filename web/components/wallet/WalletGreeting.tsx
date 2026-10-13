@@ -19,7 +19,8 @@ export function WalletGreeting() {
 
   useAccountEffect({
     onConnect() {
-      if (pathname.startsWith("/app")) return;
+      // Only the landing page hands off to the app; merchant, LP and other pages keep the user where they are.
+      if (pathname !== "/") return;
       setShow(true);
       router.prefetch("/app/dashboard");
       setTimeout(() => router.push("/app/dashboard"), 2600);

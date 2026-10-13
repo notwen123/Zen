@@ -1,5 +1,7 @@
 "use client";
 
+import { refreshAfterTx } from "@/lib/refresh";
+
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { BaseError, formatUnits, parseUnits, type Address, type Hex } from "viem";
@@ -31,7 +33,7 @@ export function useTx() {
 
   useEffect(() => {
     if (status !== "success") return;
-    for (const key of ["pools", "poolClaims", "claims", "portfolio"]) qc.invalidateQueries({ queryKey: [key], refetchType: "all" });
+    refreshAfterTx(qc);
   }, [status, qc]);
 
   async function send(req: WriteRequest, what: string) {
