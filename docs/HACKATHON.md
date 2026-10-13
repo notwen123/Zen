@@ -1,93 +1,70 @@
-# Hackathon Submission: Arbitrum Open House Singapore Buildathon 2026
+# Zen at Monad Metropolis
 
-**STOCKBACK: Proof-of-Purchase → Proof-of-Ownership.** *Scan. Prove. Own.*
+**Track:** Onchain Finance & Trading. **Direction #12:** tokenized equities as a programmable asset, i.e. a contract that locks, streams, conditions, or distributes the equity itself.
 
-A protocol that turns an **attested purchase receipt** into **pooled ownership exposure** in a brand-specific ERC-4626 vault, with replay protection, bounded rewards and no PII on-chain.
+**One line:** every stock-back reward is a locked, conditional equity claim, because the purchase can be refunded. Zen makes that claim a tradeable asset and creates the first onchain market that prices consumer refund risk, settled on Monad.
 
-This document maps the build to the published judging criteria. It states what exists and what does not. It makes no claim about the outcome.
+How Zen answers direction #12 in contract terms: the equity is **locked** (escrow until `purchase + returnWindow`), **conditioned** (a refund proof voids it before unlock), **distributed** (settled to whoever holds the claim) and made **tradeable while conditional** (the InstantExitPool buys it at a risk-priced discount).
 
-## Smart contract quality
+Every claim below links to code, a test or an on-chain transaction. Nothing here claims users, partners, revenue or an audit; none exist. All equity tokens are labelled mocks.
 
-- Eight single-purpose Solidity contracts (largest 7.3 KB runtime) plus one Stylus contract. No proxies, no god contract, no cycles (see `docs/ARCHITECTURE.md` §3).
-- **Least authority**: the verifier is a `view` bool; only the registry can consume caps or spend budget; brand vaults have **no admin**.
-- **83 Foundry tests**: unit, fuzz (1,000 runs) and 5 invariants (128 × 64 calls) covering replay, conservation of funds, vault solvency and daily caps. Plus 5 Rust tests (incl. all 100 shared benchmark vectors) and 4 benchmark correctness and gas tests. Every row of the security checklist maps to a test (`SECURITY.md`).
-- Reuses audited OpenZeppelin v5 primitives (EIP712, ECDSA, ERC4626, Ownable, ReentrancyGuard, SafeERC20, Math.mulDiv).
-- Found and fixed a real ABI mismatch inherited from the upstream code: the SwapRouter02 vs V3 struct, verified against deployed mainnet bytecode.
+---
 
-## Evidence: what is and isn't proven
+## Technical (20%)
 
-| Tier | Evidence | Status |
-|---|---|---|
-| 1 | Merchant-signed demo receipt: Ed25519 over every field, verified before attestation. **Simulated merchant.** | Implemented, tested, claimed on testnet (`0xabd3b62b…5388`) |
-| 2 | Attested photo / OCR: the attester signs what it was given, so authenticity is **not** established | Implemented |
-| 3 | Verified payment / order evidence (zkTLS) | Roadmap, not implemented |
-
-Why tiers matter: recent work shows humans detect AI-forged receipt photos at chance (0.501), and forensic detectors reach AUC 0.53–0.60. Sources and analysis are in `docs/RESEARCH.md`. A photo is therefore not treated as proof of purchase anywhere in the product.
-
-## Product-market fit
-
-- Loyalty points are closed-loop, expire and are illiquid. STOCKBACK rewards a purchase with exposure to the brand the customer actually buys from, held in a standard ERC-4626 vault the user controls.
-- Merchants fund a capped, per-brand budget, directly or in USDG. Rules are public and deterministic (`RewardPolicy`), and sponsors can withdraw unallocated budget.
-- **Who pays and why:**
-  - Brands pay because they currently fund rewards on receipts they can't trust, and coalitions charge them 10–30% while keeping their customer data.
-  - With STOCKBACK they pay only for merchant-signed purchases, within caps they set, with no operator in between.
-- **Global protocol, rail-first launch:**
-  - Currency is set per brand (ISO-4217 on-chain), geography is an `IJurisdictionPolicy` adapter, and funding is in USDG.
-  - We launch where payments already carry a digital merchant trail: Singapore (PayNow/SGQR) and India (UPI, 24.07B payments in September 2026, NPCI).
-  - The demo is priced in INR for that reason. A brand in SGD or USD is one `setBrandRules` call.
-- **Not claimed**: users, merchants, partnerships, traction, or any measured fraud reduction or retention effect. None exist yet. The `/merchant` POS is a simulation.
-
-## Innovation and creativity
-
-- The primitive is the verification and eligibility pipeline: **evidence → attestation → commitment → nullifier → eligibility → capped reward → vault shares**. The vault is not the novelty.
-- The nullifier is derived from `(merchantId, receiptHash)` only, so the same receipt cannot be re-claimed by changing claimant, amount, brand or deadline.
-- A cap or budget rejection **does not burn** the receipt; it can be claimed later (explicit state machine).
-- Verifier-agnostic proof layer: one ABI, two implementations. There is ECDSA in Solidity, and Ed25519 in **Stylus (Rust)**, the curve the EVM cannot verify natively.
-
-## Real problem solving
-
-- Anti-replay is enforced on-chain. Anti-Sybil is handled **honestly and partially**: caps, budgets and an optional KYC/jurisdiction adapter, with the limits written down (`SECURITY.md`, "Replay protection vs. Sybil resistance").
-- Merchant-signed receipts move trust from pixels to a signature. Tests cover tampering of each field, the wrong key, expiry, unsupported brands, duplicates and fail-closed config (`npm test`, `npm run test:e2e`).
-- Rewards settle instantly. There is **no** hold period for refunds yet (follow-up, needs new contracts).
-- Privacy: raw receipts and UPI references never touch the chain. Receipt hashes are salted because short references are brute-forceable (`PRIVACY.md`).
-- Compliance is an adapter, not hardcoded geography (`COMPLIANCE.md`). The demo uses clearly fictional mock assets that refuse to deploy on production chains.
-
-## Stylus / Arbitrum
-
-- `stylus/receipt-prover` passes `cargo stylus check` against **Robinhood Chain testnet**. The chain reports ArbWasm `stylusVersion() = 3`, and the StylusDeployer is present, both verified on-chain.
-- Deployed on Robinhood testnet at `0x9ae8a390121ba71545e9923b333d60e7e3ccd3bd`, and it is the registry's active verifier. A real Ed25519-attested claim settled through it (tx `0x7fe2a51a…d9c4`).
-- Measured on Robinhood testnet with identical calldata: Stylus Ed25519 is **5.3× (batch 1) to 9.2× (batch 50)** cheaper than the best available Solidity implementation, and it verifies 100 attestations in one transaction (6.58M gas), which Solidity cannot fit under the 32M cap. ECDSA via the EVM precompile remains cheaper than both. See `benchmarks/results/BENCHMARKS.md`.
-
-## USDG
-
-- `USDGRewardAdapter`: a sponsor pays the budget in USDG, which is swapped to the brand asset through SwapRouter02 with an oracle-bounded `minOut` and freshness checks, then credited to `RewardPool`.
-- **Live on testnet:** tx `0x3d8de1490c0756b92e7e9a046419c1c14aa8913e4545a22171c2362715656c6d` emitted `FundedWithUSDG`, swapping 100 USDG into 10,000 mNKE and crediting the Nike reward budget.
-- **No yield or APY is claimed.** On testnet, USDG is `MockUSDG`. Paxos USDG's Robinhood mainnet address is known from the Wield config (`config/networks.json`) but is not used.
-
-## Robinhood Chain
-
-- **Deployed on Robinhood Chain testnet (46630)**. Registry: `0x4273b12cD4A65c2180d4e65Bcb4254825cE64120`. All addresses are in `deployments/46630.json`.
-- `script/demo.sh` ran end to end on testnet: claim, portfolio, replay rejected, USDG top-up.
-- **13 claims from 3 wallets** have settled on the registry, including the merchant-signed, Stylus-verified claim recorded in the demo film (tx `0x1fc40e3e…7afa97`).
-- The live web app (`stockbacks.vercel.app`) reads every balance and activity row straight from Robinhood Chain, with no indexer and no mocked state.
-
-## Status checklist
-
-| Item | Status |
+| Evidence | Where |
 |---|---|
-| Claim model, commitment, nullifier, registry | done, tested |
-| ECDSA verifier (Solidity) | done, tested |
-| Ed25519 verifier (Stylus) | done, Rust-tested, `cargo stylus check` passes |
-| Eligibility and reward policies | done, tested |
-| BrandVaultFactory and ERC-4626 BrandVault | done, tested |
-| RewardPool and USDG adapter | done, tested |
-| End-to-end demo | done on anvil and Robinhood testnet (`script/demo.sh`) |
-| Solidity benchmark | measured |
-| Stylus benchmark | measured on Robinhood testnet |
-| Robinhood testnet deployment | done (`deployments/46630.json`) |
-| Consumer web app | done (`web/`): RainbowKit, OCR, attester API, real testnet claims |
-| Merchant-signed receipts (tier 1) | done with a **simulated** merchant: `/merchant` POS, QR scan, signature verification, 20 unit + 22 integration checks, browser claim on testnet |
-| Pending rewards / refunds, Sybil resistance, key-rotation tooling | not built (documented in `SECURITY.md`) |
-| Payment/order-source proofs (zkTLS) | not built (roadmap) |
-| Demo video | done: [2:30 film on YouTube](https://youtu.be/70fX_mN6MuE), real testnet claim on camera |
-| Whitepaper / deck | done: `whitepaper/STOCKBACK-Whitepaper.pdf`, `brand/png/STOCKBACK-deck.pdf` |
+| Three new contracts with no proxies and no admin over user funds: `ConditionalClaim` (ERC-721 positions, escrow, Locked → Voided / Settled), `VoidOracle` (EIP-712 refund attestations + refund nullifier), `InstantExitPool` (ERC-4626 per equity token, on-chain pricing, book-cost accounting) | `src/` |
+| Existing receipt pipeline rewired: `submitClaim` now mints a conditional claim in the same transaction (nullifier, eligibility, caps, budget unchanged) | `src/ReceiptCommitmentRegistry.sol`, `src/RewardPool.sol` |
+| **96 tests + 6 invariants, all passing** under Foundry 1.8.5 with `network = "monad"`: full lifecycle (sell → settle gain, sell → void loss), guards (min hold, slippage, void after unlock, replayed refund, non-attester), ERC-4626 share math with gains and losses, pricing fuzz (`price ≤ amount`, monotonic), invariant `escrowed == Σ Locked amounts` | `test/ConditionalLifecycle.t.sol`, `test/Invariant.t.sol` |
+| Monad-specific engineering: tight explicit gas limits everywhere (Monad bills the gas limit), deploy script refuses chains other than 31337 / 10143 / 143, mocks refuse mainnet, the app reads by claim-id enumeration because the public RPC caps `eth_getLogs` at 100 blocks | `script/DeployZen.s.sol`, `web/lib/chain.ts`, `web/lib/zen.ts` |
+| Resolution callback can't be griefed: gas-capped `try/catch` plus a permissionless `reconcile` | `src/ConditionalClaim.sol`, `src/InstantExitPool.sol` |
+
+## Design (20%)
+
+| Evidence | Where |
+|---|---|
+| Shopper: **My locked equity** with live countdown to unlock, labelled *demo window*, and **Cash out now** showing the live quote, the discount % and a plain-language sentence of what you give up | `web/app/app/portfolio` |
+| **LP terminal**: pool NAV, idle vs capital in claims, held claims with countdowns, per-category refund probability, expected APR with its formula and assumptions, realized gains and losses, deposit and withdraw, and a visible **risk disclosure**; every number is read from chain | `web/app/app/lp` |
+| Merchant demo: issue signed receipts, and **Issue refund** to trigger a void (shows the LP-loss path) | `web/app/(site)/merchant` |
+| Honest labels throughout: demo windows, mock assets, simulated merchant, demo admin | UI + README |
+
+## Originality (15%)
+
+- Stock-back products (Bumped, Bits of Stock, Bitget Wallet Assetback, Crumbs) pay rewards or keep them "pending". None represents the reward as what it is, a **conditional** equity claim, and none prices the refund risk.
+- Zen turns the return window into an asset with a price: `amount × (1 − pRefund × walletRisk) × (1 − timeValue) × (1 − fee)`. LPs take the other side of **consumer refund risk**, a risk that has no on-chain market today.
+- Adverse selection is addressed in the mechanism (minimum hold, wallet refund history kept against the original claimant, signed and nullified refund proofs), not left to policy.
+
+## Founder & Market (25%)
+
+| Evidence | Source |
+|---|---|
+| $849.9B of US retail returns expected in 2025; 9% fraudulent | [NRF & Happy Returns, 2025](https://nrf.com/research/2025-retail-returns-landscape) |
+| $103B lost to return fraud and abuse in 2024 | [Appriss Retail & Deloitte](https://apprissretail.com/news/appriss-retail-annual-research-fraudulent-returns-and-claims-cost-retailers-103b-in-2024/) |
+| Bumped, the brand-funded stock-reward app, shut down in December 2022 after ending rewards that July; brands paid for every share | [Doctor of Credit](https://www.doctorofcredit.com/bumped-app-earn-stock-rewards-on-retail-purchases-by-linking-a-card/) |
+| Stock-back is live again with tokenized equities (Bitget Wallet Assetback, from 1 Aug 2026) | [GlobeNewswire](https://www.globenewswire.com/news-release/2026/08/01/3337111/0/en/bitget-wallet-card-turns-cashback-into-bitcoin-gold-and-tokenized-stocks.html) |
+| Positioning: the settlement and refund-risk layer for stock-back issuers, not another rewards app | README → Competition |
+| First users: LPs who want returns uncorrelated with crypto; stock-back issuers are **target** customers (no partnerships exist) | README → First users |
+| The team built the receipt-verification core first (prototype) and found its real gap: rewards paid on day 0 on purchases that can still be refunded. Zen is the answer to that gap. | `git log` |
+
+## Traction (20%)
+
+Real Monad testnet transactions from 4 wallets (3 shoppers + 1 LP), recorded in `deployments/10143-activity.json` and listed in the README: 20 verified purchases minted as conditional claims across fashion, electronics and food; LP deposits into all three exit pools; 8 instant exits; 2 refunds (one pool-held: a real LP loss); the remaining claims settled after their labelled demo windows, the pool-held ones as realized LP gains. These are test trades by the team, not users.
+
+---
+
+## Built during Monad Metropolis
+
+The first commit imports the earlier prototype as a baseline (`chore: import STOCKBACK prototype`). Everything after it was built in the window: the conditional-claim lifecycle, VoidOracle, InstantExitPool, pricing and adverse-selection defenses, their tests and invariants, the Monad migration (Foundry Monad execution, gas-limit handling, deploy script, AUSD), the testnet deployment and seeded activity, the LP terminal, the locked-equity and cash-out UI, and the refund flow. The Arbitrum-era Stylus verifier and its benchmark were removed (Monad has no Stylus).
+
+## Submission checklist
+
+- [x] Contracts deployed on Monad testnet (`deployments/10143.json`)
+- [x] Seeded testnet activity with tx hashes (`deployments/10143-activity.json`)
+- [x] Tests: 96 + 6 invariants passing
+- [x] README with pitch, how it works, why Monad, pricing, adverse selection, market, competition, traction, next steps, security, addresses, quickstart
+- [ ] Logo (human)
+- [ ] Demo video ≤ 3 min (human)
+- [ ] Pitch video ≤ 2 min (human)
+- [ ] Repo access for metropolis@hackathon.monad.xyz (human)
+- [ ] Hosted web app with `web/.env.local` secrets set in the host (human)

@@ -9,7 +9,7 @@
 | Commitment / claim ID (EIP-712 struct hash) | On-chain (event) | Hash only. |
 | Nullifier | On-chain (storage, event) | `keccak256(tag, merchantId, receiptHash)`. |
 | Amount, currency, purchase time, brand | On-chain (calldata, event) | Needed to evaluate reward rules publicly. See "What is still revealed". |
-| Claimant wallet address | On-chain | Receives the shares. |
+| Claimant wallet address | On-chain | Receives the conditional claim; recorded as `originalClaimant` for refund-history pricing. |
 | Attestation signature | On-chain (calldata) | Proves an allowlisted attester signed; contains no PII. |
 
 ## What is still revealed
