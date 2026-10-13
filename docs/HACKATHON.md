@@ -69,4 +69,4 @@ The first commit imports the earlier prototype as a baseline (`chore: import STO
 - [ ] Demo video ≤ 3 min (human)
 - [ ] Pitch video ≤ 2 min (human)
 - [ ] Repo access for metropolis@hackathon.monad.xyz (human)
-- [ ] Hosted web app with `web/.env.local` secrets set in the host (human)
+- [x] Hosted web app: https://zen-monad.zen-web.workers.dev (Cloudflare Workers, secrets as Worker secrets)

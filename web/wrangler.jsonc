@@ -1,0 +1,11 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "zen-monad",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true }
+  // Server secrets (never in this file): ATTESTER_ECDSA_KEY, ATTESTER_SALT, MERCHANT_ED25519_SEED,
+  // MERCHANT_ED25519_PUBLIC_KEY, FAUCET_PRIVATE_KEY -> `wrangler secret put <NAME>`
+}

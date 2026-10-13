@@ -33,7 +33,8 @@ That last step is the market: LPs earn the spread on claims that settle and lose
 | Network | **Monad testnet** (chain 10143), explorer [testnet.monadvision.com](https://testnet.monadvision.com) |
 | Contracts | [Addresses below](#contracts-and-addresses), all deployed by `script/DeployZen.s.sol` |
 | Seeded activity | [Traction](#traction-real-testnet-transactions): 20 purchases, 8 instant exits, 2 refunds, the rest settled, from 4 wallets |
-| Web app | `cd web && npm ci && npm run dev`, then open http://localhost:3000 ([quickstart](#quickstart)) |
+| **Live app** | **https://zen-monad.zen-web.workers.dev** (Cloudflare Workers; passkey sign-in, free test MON on first sign-in) |
+| Run locally | `cd web && npm ci && npm run dev`, then open http://localhost:3000 ([quickstart](#quickstart)) |
 | Indexer | **Envio HyperIndex** over HyperSync (`indexer/`): every claim, cash-out, refund, settle and LP flow with its tx hash; powers the LP terminal's market tape and Activity history. Backfills the whole deployment in seconds; indexed pool P&L matches the contracts exactly |
 | Accounts | Passkeys via Mera: one passkey → a Monad EOA (signing) + a separate HKDF key for the encrypted **Receipt Locker** ([SECURITY.md](SECURITY.md#passkey-accounts-and-key-separation-mera)) |
 
@@ -263,6 +264,8 @@ cd indexer && npm install && npx envio dev     # GraphQL at http://localhost:808
 
 # web app
 cd web && npm ci && npm run sync-contracts && npm run dev
+# deploy to Cloudflare Workers (OpenNext); set server secrets with `npx wrangler secret put <NAME>`
+npm run cf:build && npm run cf:deploy
 ```
 
 `web/.env.local` needs `ATTESTER_ECDSA_KEY`, `ATTESTER_SALT`, `MERCHANT_ED25519_SEED`, `MERCHANT_ED25519_PUBLIC_KEY` and, for the testnet faucet, `FAUCET_PRIVATE_KEY` (see `web/.env.example`). Never commit them.
