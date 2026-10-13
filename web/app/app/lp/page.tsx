@@ -5,6 +5,7 @@ import { usePools } from "@/components/hooks/useZen";
 import { PoolPanel, RiskDisclosure } from "@/components/lp/PoolPanel";
 import { Eyebrow } from "@/components/ui/Button";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
+import { MarketTape } from "@/components/indexer/MarketTape";
 
 export default function LpTerminal() {
   const { address } = useAccount();
@@ -43,6 +44,10 @@ export default function LpTerminal() {
         ) : (
           pools.data?.map((p) => <PoolPanel key={p.pool} p={p} address={address} />)
         )}
+      </div>
+
+      <div className="mt-12">
+        <MarketTape title="Market tape · cash-outs, refunds, settlements, LP flows" />
       </div>
     </div>
   );

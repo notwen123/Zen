@@ -1,0 +1,71 @@
+"""One conditional equity claim (ERC-721 position on ConditionalClaim)."""
+type Claim {
+  id: ID! # claim id (decimal string)
+  claimant: String!
+  holder: String!
+  brand: String!
+  equityToken: String!
+  amount: BigInt!
+  category: Int!
+  unlockAt: BigInt!
+  status: String! # LOCKED | VOIDED | SETTLED
+  mintedAt: BigInt!
+  mintTx: String!
+  purchaseAmount: BigInt # minor units from PurchaseCommitted (same tx)
+  currency: String
+  sold: Boolean!
+  salePrice: BigInt
+  saleTx: String
+  refundRef: String
+  resolvedAt: BigInt
+  resolvedTx: String
+  poolCost: BigInt
+  poolProceeds: BigInt
+}
+
+"""Every user-visible event with its transaction hash: purchases, cash-outs, refunds, settles, LP flows."""
+type Activity {
+  id: ID! # txHash-logIndex
+  kind: String! # CLAIM | CASH_OUT | REFUND | SETTLE | LP_DEPOSIT | LP_WITHDRAW
+  account: String!
+  claimId: String
+  brand: String
+  amount: BigInt!
+  price: BigInt
+  pool: String
+  timestamp: BigInt!
+  blockNumber: Int!
+  txHash: String!
+}
+
+"""Running totals per exit pool, as recorded by events."""
+type Pool {
+  id: ID! # pool address
+  brand: String!
+  deposited: BigInt!
+  withdrawn: BigInt!
+  claimsBought: Int!
+  boughtFace: BigInt!
+  boughtCost: BigInt!
+  realizedGains: BigInt!
+  realizedLosses: BigInt!
+  settledCount: Int!
+  voidedCount: Int!
+}
+
+"""Per-wallet history: claims earned, refunds, cash-outs (the refund-risk signal, now queryable)."""
+type Account {
+  id: ID!
+  claims: Int!
+  voids: Int!
+  cashOuts: Int!
+  lpDeposits: BigInt!
+}
+
+"""Purchase details from PurchaseCommitted, keyed by tx hash (joined into Claim by ClaimMinted in the same tx)."""
+type Purchase {
+  id: ID! # tx hash
+  amount: BigInt!
+  currency: String!
+  claimant: String!
+}

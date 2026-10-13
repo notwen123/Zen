@@ -4,6 +4,7 @@ import { useAccount } from "@/lib/account";
 import { useActivity } from "@/components/hooks/useZen";
 import { ActivityTimeline, Empty, Muted, ScanLink } from "@/components/ownership/Ownership";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
+import { MarketTape } from "@/components/indexer/MarketTape";
 
 export default function Activity() {
   const { address } = useAccount();
@@ -23,7 +24,12 @@ export default function Activity() {
         ) : isError ? (
           <Empty title="Activity isn't available right now." body="The Monad testnet RPC didn't respond. Try again in a moment." />
         ) : data?.length ? (
-          <ActivityTimeline items={data} />
+          <>
+            <ActivityTimeline items={data} />
+            <div className="mt-12">
+              <MarketTape account={address} title="Your transactions" limit={50} />
+            </div>
+          </>
         ) : (
           <Empty title="No activity yet." body="Your verified purchases will appear here as locked equity claims." cta={<ScanLink />} />
         )}
