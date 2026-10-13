@@ -1,0 +1,18 @@
+out/
+cache/
+broadcast/
+/lib/
+.env
+.env.*
+!.env.example
+docs/book/
+# Original Wield checkout kept locally for provenance; it is its own git repo.
+refrance/
+# Stylus build output
+stylus/**/target/
+benchmarks/solidity/out/
+benchmarks/solidity/cache/
+benchmarks/solidity/lib
+# Local anvil deployments are throwaway
+deployments/31337.json
+/.playwright-mcp/

@@ -1,0 +1,4 @@
+Ed25519.sol and Sha512.sol are copied unmodified from
+https://github.com/chengwenxi/Ed25519 (commit 34d8c5701c8f73c4be68f3f6fdd50cba0e40f1af),
+licensed under the Apache License 2.0 (see LICENSE in this directory).
+They are used only as the Solidity baseline in the STOCKBACK benchmark, not in the protocol.

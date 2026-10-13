@@ -1,0 +1,17 @@
+# Standalone project: the vendored Ed25519 baseline requires solc ^0.6.8,
+# so solc is auto-detected per file instead of pinned like the main project.
+[profile.default]
+src = "src"
+test = "test"
+out = "out"
+libs = ["../../lib"]
+allow_paths = ["../../src"]
+optimizer = true
+optimizer_runs = 200
+gas_limit = "18446744073709551615"
+fs_permissions = [{ access = "read", path = "../fixtures" }, { access = "write", path = "../results" }]
+remappings = [
+  "forge-std/=../../lib/forge-std/src/",
+  "@openzeppelin/=../../lib/openzeppelin-contracts/",
+  "stockback/=../../src/",
+]

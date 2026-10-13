@@ -1,0 +1,76 @@
+1
+00:00:03,600 --> 00:00:04,861
+This receipt is fake.
+
+2
+00:00:06,000 --> 00:00:08,901
+It took less than a second to make. And you couldn't tell.
+
+3
+00:00:13,400 --> 00:00:19,769
+In a twenty twenty-six study, people spotted AI-edited receipts fifty point one percent of the time.
+
+4
+00:00:20,600 --> 00:00:24,269
+A coin flip. The best forensic detectors barely beat chance.
+
+5
+00:00:25,400 --> 00:00:31,519
+And when the purchase is real, the reward is a point. In one of fifteen programs you joined, and forgot.
+
+6
+00:00:36,400 --> 00:00:38,185
+So we stopped trusting pixels.
+
+7
+00:00:39,600 --> 00:00:40,740
+This is Stockback.
+
+8
+00:00:42,400 --> 00:00:51,066
+The merchant seals every receipt with a signature. Arbitrum verifies it. And your reward is real ownership, in the brand you bought from.
+
+9
+00:00:57,800 --> 00:01:04,710
+Here it is, live on Robinhood Chain. At the till, the merchant issues a sealed receipt. Every field, signed.
+
+10
+00:01:10,300 --> 00:01:17,530
+The customer scans it. Stockback checks the merchant's signature, the expiry, and whether this receipt was ever used.
+
+11
+00:01:19,400 --> 00:01:26,962
+One tap. One transaction. Rust on Arbitrum Stylus verifies the claim, and vault shares land in the wallet.
+
+12
+00:01:28,000 --> 00:01:30,587
+A real transaction, confirmed on chain.
+
+13
+00:01:37,400 --> 00:01:42,537
+Try to use the same receipt twice, and it's rejected. Once per receipt. For anyone.
+
+14
+00:01:47,200 --> 00:01:56,246
+Under the hood, Stylus verifies these signatures for up to nine times less gas than Solidity. A hundred fit in a single transaction.
+
+15
+00:01:57,300 --> 00:02:00,671
+Change one digit on a sealed receipt, and the seal breaks.
+
+16
+00:02:03,000 --> 00:02:08,094
+Shoppers own a share of what they buy. No expiry. No admin who can take it back.
+
+17
+00:02:09,000 --> 00:02:13,294
+Brands reward only verified purchases, on budgets they control.
+
+18
+00:02:18,200 --> 00:02:19,044
+Stockback.
+
+19
+00:02:20,000 --> 00:02:21,442
+Scan. Prove. Own.
+

@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/* STOCKBACK design tokens - Japanese editorial fintech.
+   ~90% paper / ink / neutral, ~8% muted secondary, ~2% vermilion. */
+:root {
+  --stockback-paper: #f4efe3;
+  --stockback-paper-dark: #e9e0d1;
+  --stockback-ink: #171717;
+  --stockback-charcoal: #343230;
+  --stockback-muted: #6b645b; /* body-secondary text: 5.3:1 on paper */
+  --stockback-red: #c83a2f;
+  --stockback-red-dark: #8f211d;
+  --stockback-stone: #b8b0a2; /* rules & decoration only, not text */
+  --stockback-gold: #b58a45;
+  --ease-ink: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@theme inline {
+  --color-paper: var(--stockback-paper);
+  --color-paper-dark: var(--stockback-paper-dark);
+  --color-ink: var(--stockback-ink);
+  --color-charcoal: var(--stockback-charcoal);
+  --color-muted: var(--stockback-muted);
+  --color-vermilion: var(--stockback-red);
+  --color-vermilion-deep: var(--stockback-red-dark);
+  --color-stone: var(--stockback-stone);
+  --color-gold: var(--stockback-gold);
+  --font-display: var(--font-mincho), "Times New Roman", serif;
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-numeric), ui-monospace, monospace;
+  --ease-ink: var(--ease-ink);
+}
+
+html {
+  background: var(--stockback-paper);
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--stockback-paper);
+  /* Paper grain: a static SVG noise tile, rendered once. */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0 0.07 0 0 0 .07 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  color: var(--stockback-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--stockback-red);
+  color: var(--stockback-paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--stockback-red);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* Editorial rule */
+.rule {
+  height: 1px;
+  background: linear-gradient(90deg, var(--stockback-ink) 0 40%, var(--stockback-stone) 40%);
+  opacity: 0.35;
+}
+
+/* Ink button: a brush fill slides in from the left on hover. */
+.ink-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: color 250ms var(--ease-ink);
+}
+.ink-btn::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  background: var(--stockback-red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 380ms var(--ease-ink);
+  border-radius: inherit;
+}
+.ink-btn:hover::before,
+.ink-btn:focus-visible::before {
+  transform: scaleX(1);
+}
+
+/* Soft edges for cut-out 3D objects: fade left/right and top so crops never show a hard line. */
+.edge-fade {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 86%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 86%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* Nav underline */
+.ink-link {
+  background: linear-gradient(var(--stockback-red), var(--stockback-red)) left bottom / 0 1.5px no-repeat;
+  transition: background-size 280ms var(--ease-ink);
+}
+.ink-link:hover,
+.ink-link[aria-current="page"] {
+  background-size: 100% 1.5px;
+}
+
+/* SVG stroke drawing (brush marks, seals, rules) */
+.draw {
+  stroke-dasharray: var(--len, 1200);
+  stroke-dashoffset: var(--len, 1200);
+  animation: draw var(--dur, 1400ms) var(--ease-ink) var(--delay, 0ms) forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Slow ambient float for 3D-ish paper objects */
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--r, 0deg));
+  }
+  50% {
+    transform: translate3d(0, -10px, 0) rotate(var(--r, 0deg));
+  }
+}
+.float {
+  animation: float-y var(--float-dur, 7s) ease-in-out infinite;
+}
+
+/* Falling petals */
+@keyframes petal {
+  0% {
+    transform: translate3d(0, -10vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(var(--drift, -120px), 110vh, 0) rotate(540deg);
+    opacity: 0;
+  }
+}
+.petal {
+  animation: petal var(--fall, 14s) linear var(--delay, 0s) infinite;
+}
+/* side-to-side flutter, layered on top of the fall */
+@keyframes petal-sway {
+  0%,
+  100% {
+    transform: translate3d(-10px, 0, 0) rotate(-25deg);
+  }
+  50% {
+    transform: translate3d(12px, 0, 0) rotate(30deg);
+  }
+}
+.petal-sway {
+  animation: petal-sway var(--sway-dur, 3s) ease-in-out infinite;
+}
+
+/* Receipt scanner line */
+@keyframes scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10%,
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(var(--scan-h, 260px));
+    opacity: 0;
+  }
+}
+.scan-line {
+  animation: scan 2.6s var(--ease-ink) infinite;
+}
+
+/* Infinite horizontal ticker (content is duplicated, so -50% loops seamlessly). */
+@keyframes marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.marquee {
+  animation: marquee 60s linear infinite;
+}
+
+/* Pending pulse for pipeline steps */
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.breathe {
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+/* Reduced motion: the OS setting, or the in-app Motion preference (html.motion-off). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+  .petal,
+  .petal-sway,
+  .scan-line {
+    display: none;
+  }
+}
+html.motion-off *,
+html.motion-off *::before,
+html.motion-off *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 1ms !important;
+}
+html.motion-off .petal,
+html.motion-off .petal-sway,
+html.motion-off .scan-line {
+  display: none;
+}

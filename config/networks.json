@@ -1,0 +1,20 @@
+{
+  "_note": "Network registry for scripts and frontends. Only networks with mode=demo may receive mock assets; DeployStockback.s.sol enforces the same chain list and every mock contract reverts on 4663/42161.",
+  "local": { "chainId": 31337, "rpc": "http://127.0.0.1:8545", "mode": "demo" },
+  "robinhoodTestnet": {
+    "chainId": 46630,
+    "rpc": "https://rpc.testnet.chain.robinhood.com",
+    "faucet": "https://faucet.testnet.chain.robinhood.com/",
+    "mode": "demo",
+    "verified": "chainId 46630 and ArbWasm stylusVersion()=3 read from RPC on 2026-09-28; maxTxGasLimit 32,000,000 (ArbGasInfo)"
+  },
+  "arbitrumSepolia": { "chainId": 421614, "rpc": "https://sepolia-rollup.arbitrum.io/rpc", "mode": "demo" },
+  "robinhoodMainnet": {
+    "chainId": 4663,
+    "rpc": "https://rpc.mainnet.chain.robinhood.com",
+    "mode": "production-not-supported",
+    "_known": "Addresses below come from the Wield deployment config and are NOT used by STOCKBACK yet. Production requires issuer authorization and compliance review (docs/COMPLIANCE.md).",
+    "usdg": "0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168",
+    "swapRouter02": "0xCaf681a66D020601342297493863E78C959E5cb2"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "attester": "0xAc488e431AecD1a63EEc016df5033cB255929051",
+  "brandVaultFactory": "0xA8ee8029F57e5251aCEbEcD96B6aB3E345BeBA5b",
+  "chainId": 46630,
+  "deployer": "0x5aB3036C7d0bA7043E0BB531374dC6c732eC4954",
+  "ecdsaVerifier": "0x3d2F146142387654B8118952e38ac87aA492879A",
+  "eligibilityPolicy": "0x2511F246623feFB12b1eb10B0aA3871E9595a2Cf",
+  "mAAPLAsset": "0xf0a10c967c11FDEDDA068e15521550f07AB6799a",
+  "mAAPLVault": "0x3979865D7963b9eb84183dcd9DC4024C04b3bd22",
+  "mNKEAsset": "0x6294405aF0E0a974aFaf30d3d85cc5702688cb0f",
+  "mNKEVault": "0x01650440F92F1A70d74a67F2da72370d34fC43b4",
+  "mSBUXAsset": "0xA1D07095ad84ba46c88325e4686Af3F78F97d3bb",
+  "mSBUXVault": "0xc5564C4209A3627E0c6e851884A1F01FA3aAC4BC",
+  "mockSwapRouter": "0xa4fFc481CEBdfe5c769D49345Bd5432a5A05B878",
+  "mockUSDG": "0x877aD6883C1874F08dE56A56406eb6f1392bC493",
+  "mocks": true,
+  "registry": "0x4273b12cD4A65c2180d4e65Bcb4254825cE64120",
+  "rewardPolicy": "0x687F2903D0F8A85A6a47F84013423EC5e47353Fa",
+  "rewardPool": "0xfcd0Db816184AF3bdf3Fa617E1bCDB5D6c638bB8",
+  "usdgRewardAdapter": "0xe8CDb2525eE30140f3344f2D18BAe312b1336961",
+  "verifier": "0x9ae8a390121ba71545e9923b333d60e7e3ccd3bd",
+  "stylusVerifier": "0x9ae8a390121ba71545e9923b333d60e7e3ccd3bd",
+  "benchmarkSolidityEd25519Verifier": "0xD5e5CE9708d70aE8727E3cCED08b25b9036F2A37",
+  "transactions": {
+    "stylusDeploy": "0xa989f3a9598b19fc24ec713040db358c2bb62a24a00c31dd59d16522de665558",
+    "ecdsaClaimNIKE": "0x4e2c8097030ef2b0842b0e6dbb79675437637dea04dfb7531d0938a13ff9c604",
+    "setVerifierStylus": "0xdef1f3214a7aae35a2b8b970aaf8276a1aae29ba8d3f873b7278f436a784c324",
+    "stylusEd25519ClaimAAPL": "0x7fe2a51a5567bec1b96e2fa389c959368fbeda7a05bacc98c3383f544fc8d9c4"
+  },
+  "_note": "Registry verifier switched from ecdsaVerifier to stylusVerifier after the ECDSA demo claim. Demo/mock assets only."
+}

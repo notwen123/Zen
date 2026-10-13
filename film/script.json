@@ -1,0 +1,25 @@
+{
+  "voice": "af_heart",
+  "speed": 0.94,
+  "lines": [
+    { "id": "hook1", "text": "This receipt is fake." },
+    { "id": "hook2", "text": "It took less than a second to make. And you couldn't tell." },
+    { "id": "prob1", "text": "In a twenty twenty-six study, people spotted AI-edited receipts fifty point one percent of the time." },
+    { "id": "prob2", "text": "A coin flip. The best forensic detectors barely beat chance." },
+    { "id": "prob3", "text": "And when the purchase is real, the reward is a point. In one of fifteen programs you joined, and forgot." },
+    { "id": "pain1", "text": "So we stopped trusting pixels." },
+    { "id": "pain2", "text": "This is Stockback." },
+    { "id": "pain3", "text": "The merchant seals every receipt with a signature. Arbitrum verifies it. And your reward is real ownership, in the brand you bought from." },
+    { "id": "prod1", "text": "Here it is, live on Robinhood Chain. At the till, the merchant issues a sealed receipt. Every field, signed." },
+    { "id": "prod2", "text": "The customer scans it. Stockback checks the merchant's signature, the expiry, and whether this receipt was ever used." },
+    { "id": "prod3", "text": "One tap. One transaction. Rust on Arbitrum Stylus verifies the claim, and vault shares land in the wallet." },
+    { "id": "prod4", "text": "A real transaction, confirmed on chain." },
+    { "id": "prod5", "text": "Try to use the same receipt twice, and it's rejected. Once per receipt. For anyone." },
+    { "id": "tech1", "text": "Under the hood, Stylus verifies these signatures for up to nine times less gas than Solidity. A hundred fit in a single transaction." },
+    { "id": "tech2", "text": "Change one digit on a sealed receipt, and the seal breaks." },
+    { "id": "imp1", "text": "Shoppers own a share of what they buy. No expiry. No admin who can take it back." },
+    { "id": "imp2", "text": "Brands reward only verified purchases, on budgets they control." },
+    { "id": "out1", "text": "Stockback." },
+    { "id": "out2", "text": "Scan. Prove. Own." }
+  ]
+}

@@ -1,0 +1,28 @@
+[profile.default]
+src = "src"
+out = "out"
+libs = ["lib"]
+test = "test"
+script = "script"
+solc = "0.8.24"
+optimizer = true
+optimizer_runs = 200
+fs_permissions = [{ access = "read-write", path = "./deployments" }]
+
+[rpc_endpoints]
+robinhood_testnet = "${ROBINHOOD_TESTNET_RPC_URL}"
+robinhood_mainnet = "${ROBINHOOD_MAINNET_RPC_URL}"
+
+[lint]
+# Style kept consistent with the Wield codebase (camelCase immutables, plain keccak256).
+exclude_lints = ["screaming-snake-case-immutable", "asm-keccak256", "mixed-case-function"]
+# Lint production code only; tests/scripts intentionally cast string literals to bytes32.
+ignore = ["test/**/*.sol", "script/**/*.sol"]
+
+[fuzz]
+runs = 1000
+
+[invariant]
+runs = 128
+depth = 64
+fail_on_revert = false
