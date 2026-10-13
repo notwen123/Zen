@@ -45,7 +45,7 @@ export function Hero() {
       <div className="mx-auto grid min-h-[calc(100dvh-4rem)] max-w-[1320px] items-center gap-6 px-5 pb-20 pt-10 sm:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-12 lg:pb-16">
         <motion.div style={reduce ? undefined : { y: type }} className="relative z-10">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8, delay: 0.3 }}>
-            <Eyebrow className="text-charcoal">Proof of purchase → Proof of ownership</Eyebrow>
+            <Eyebrow className="text-charcoal">Stock-back rewards → tradeable claims</Eyebrow>
           </motion.div>
           <h1 id="hero-title" className="mt-5 font-display text-[clamp(3.8rem,11.5vw,8.6rem)] font-extrabold leading-[0.9] tracking-[-0.02em]">
             {["Scan.", "Prove.", "Own."].map((w, i) => (
@@ -69,9 +69,9 @@ export function Hero() {
             ))}
           </h1>
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 1.2, ease: EASE }}>
-            <p className="mt-7 max-w-md text-lg leading-relaxed text-ink sm:text-xl">Turn everyday purchases into programmable ownership.</p>
+            <p className="mt-7 max-w-md text-lg leading-relaxed text-ink sm:text-xl">Every stock-back reward is a locked, conditional equity claim, because the purchase can be refunded.</p>
             <p className="mt-3 max-w-md text-sm leading-relaxed text-charcoal">
-              STOCKBACK connects attested purchase receipts with on-chain ownership rewards, held in brand vaults you control.
+              Zen makes that claim a tradeable asset and creates the first onchain market that prices consumer refund risk, settled on Monad.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-4">
               <ButtonLink href="/app/scan">
@@ -151,9 +151,9 @@ function PhoneComposition() {
         animate={{ opacity: 1, scale: 1, rotate: -12 }}
         transition={{ duration: 0.45, delay: 2.2, ease: [0.3, 1.4, 0.5, 1] }}
       >
-        Nike vault
+        Nike claim
         <br />
-        +15.00
+        locked
       </motion.div>
     </div>
   );

@@ -55,7 +55,7 @@ Real Monad testnet transactions from 4 wallets (3 shoppers + 1 LP), recorded in 
 
 ## Built during Monad Metropolis
 
-The first commit imports the earlier prototype as a baseline (`chore: import STOCKBACK prototype`). Everything after it was built in the window: the conditional-claim lifecycle, VoidOracle, InstantExitPool, pricing and adverse-selection defenses, their tests and invariants, the Monad migration (Foundry Monad execution, gas-limit handling, deploy script, AUSD), the testnet deployment and seeded activity, the LP terminal, the locked-equity and cash-out UI, and the refund flow. The Arbitrum-era Stylus verifier and its benchmark were removed (Monad has no Stylus).
+The first commit imports the earlier prototype as a baseline (`chore: import STOCKBACK prototype`). Everything after it was built in the window: the conditional-claim lifecycle, VoidOracle, InstantExitPool, pricing and adverse-selection defenses, their tests and invariants, the Monad migration (Foundry Monad execution, gas-limit handling, deploy script, AUSD), the testnet deployment and seeded activity, the LP terminal, the locked-equity and cash-out UI, and the refund flow. The prototype's non-EVM signature verifier and its benchmark were removed; Zen verifies attestations with plain ECDSA on Monad.
 
 ## Submission checklist
 

@@ -64,7 +64,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider theme={theme} modalSize="compact" appInfo={{ appName: "STOCKBACK" }}>
+        <RainbowKitProvider theme={theme} modalSize="compact" appInfo={{ appName: "Zen" }}>
           <MotionPrefContext.Provider value={{ pref, setPref }}>
             <MotionConfig reducedMotion={pref === "reduced" ? "always" : "user"}>{children}</MotionConfig>
           </MotionPrefContext.Provider>

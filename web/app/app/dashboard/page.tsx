@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { useAccount } from "wagmi";
-import { useActivity, usePortfolio } from "@/components/hooks/useStockback";
-import { ActivityTimeline, Empty, Muted, OwnershipTotal, PositionRow, ScanLink } from "@/components/ownership/Ownership";
+import { useActivity, useClaims } from "@/components/hooks/useZen";
+import { ClaimsSummary, useNow } from "@/components/claims/LockedEquity";
+import { ActivityTimeline, Empty, Muted, ScanLink } from "@/components/ownership/Ownership";
+import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -11,9 +14,9 @@ const greeting = () => {
 
 export default function Dashboard() {
   const { address } = useAccount();
-  const portfolio = usePortfolio(address);
+  const claims = useClaims(address);
   const activity = useActivity(address);
-  const held = portfolio.data?.positions.filter((p) => p.assets > 0n) ?? [];
+  const now = useNow();
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -21,44 +24,46 @@ export default function Dashboard() {
         {greeting()}
       </p>
       <div className="mt-8 border-b border-ink/15 pb-10">
-        <OwnershipTotal total={portfolio.data?.totalUnits} brands={held.length} loading={portfolio.isLoading} />
-        {portfolio.isError && <p className="mt-3 text-sm text-vermilion-deep">Couldn&apos;t read your vaults from Robinhood testnet. Retrying shortly.</p>}
+        {!address ? (
+          <Empty title="Connect your wallet." body="See your locked equity, what unlocks next and what you can cash out." cta={<ConnectWallet />} />
+        ) : claims.isLoading ? (
+          <p className="breathe font-display text-6xl font-bold" role="status" aria-label="Loading your claims">
+            —
+          </p>
+        ) : claims.isError ? (
+          <p className="text-sm text-vermilion-deep">Couldn&apos;t read your claims from Monad testnet. Retrying shortly.</p>
+        ) : (
+          <>
+            <ClaimsSummary claims={claims.data ?? []} now={now} />
+            <Link href="/app/portfolio" className="ink-link mt-6 inline-block text-sm">
+              Manage locked equity: cash out or settle →
+            </Link>
+          </>
+        )}
       </div>
 
-      <div className="mt-12 grid gap-14 lg:grid-cols-[1fr_1fr]">
-        <section aria-labelledby="own-h">
-          <h2 id="own-h">
-            <Muted>Brands you own</Muted>
-          </h2>
-          {held.length ? (
-            <ul className="mt-2 divide-y divide-ink/10">
-              {held.map((p) => (
-                <PositionRow key={p.id} p={p} />
-              ))}
-            </ul>
-          ) : (
-            !portfolio.isLoading && <div className="mt-4"><Empty title="Nothing owned yet." body="Your first claimed purchase will appear here as brand-vault shares." /></div>
-          )}
-        </section>
-        <section aria-labelledby="act-h">
+      {address && (
+        <section aria-labelledby="act-h" className="mt-12">
           <h2 id="act-h">
             <Muted>Recent activity</Muted>
           </h2>
           <div className="mt-4">
             {activity.isLoading ? (
-              <p className="breathe text-sm text-muted">Reading Robinhood testnet…</p>
+              <p className="breathe text-sm text-muted">Reading Monad testnet…</p>
+            ) : activity.isError ? (
+              <p className="text-sm text-vermilion-deep">Activity isn&apos;t available right now.</p>
             ) : activity.data?.length ? (
               <ActivityTimeline items={activity.data} limit={4} />
             ) : (
-              <Empty title="No activity yet." body="Claims you create will be listed here with their transactions." />
+              <Empty title="No activity yet." body="Each verified purchase becomes a locked equity claim, listed here." />
             )}
           </div>
         </section>
-      </div>
+      )}
 
       <div className="mt-16 flex flex-wrap items-center justify-between gap-6 border-t border-ink/15 pt-10">
         <p className="max-w-md font-display text-2xl">Every receipt is a chance to own a little more of what you buy.</p>
-        <ScanLink label={held.length ? "Scan another receipt" : "Scan your first receipt"} />
+        <ScanLink label={claims.data?.length ? "Scan another receipt" : "Scan your first receipt"} />
       </div>
     </div>
   );

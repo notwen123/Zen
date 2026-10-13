@@ -1,19 +1,20 @@
 "use client";
 
 import { motion } from "motion/react";
+import type { VerifierKind } from "@/lib/zen";
 
 export type PipelinePhase = "waiting" | "running" | "done" | "failed";
 
 /** The six gates of submitClaim. They all run inside ONE transaction, so while it is pending the
  *  steps only "breathe"; checkmarks appear after the receipt confirms success. */
-export function VerificationPipeline({ phase, verifier }: { phase: PipelinePhase; verifier: "stylus" | "ecdsa" | "unknown" }) {
+export function VerificationPipeline({ phase, verifier }: { phase: PipelinePhase; verifier: VerifierKind }) {
   const steps = [
     ["Commit", "Claim commitment recorded"],
     ["Nullifier", "Receipt marked as used"],
-    [verifier === "stylus" ? "Stylus" : "Signature", verifier === "stylus" ? "Ed25519 verified in Rust" : "Attestation verified"],
+    ["Signature", verifier === "ecdsa" ? "ECDSA attestation verified" : "Attestation verified"],
     ["Eligibility", "Brand, amount and date rules"],
     ["Reward", "Rate and caps applied"],
-    ["Vault", "Shares deposited to you"],
+    ["Claim", "Equity escrowed, locked for the return window"],
   ];
   return (
     <ol className="grid grid-cols-2 gap-px bg-ink/10 sm:grid-cols-3" aria-live="polite">

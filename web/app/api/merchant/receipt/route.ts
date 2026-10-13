@@ -16,7 +16,7 @@ const bad = (error: string, status = 400) => Response.json({ error }, { status }
 export async function POST(req: Request) {
   if (!SEED) return bad("Merchant demo is not configured", 503);
   // Key separation: refuse to run if the merchant key was set to the attester key.
-  if (SEED.replace(/^0x/, "") === process.env.ATTESTER_ED25519_SEED?.replace(/^0x/, "")) return bad("Merchant key must differ from attester key", 503);
+  if (SEED.replace(/^0x/, "") === process.env.ATTESTER_ECDSA_KEY?.replace(/^0x/, "")) return bad("Merchant key must differ from attester key", 503);
   if (limited(req)) return bad("Too many requests. Try again in a few minutes.", 429);
 
   let body: Record<string, unknown>;
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     return bad("Invalid JSON");
   }
   const brand = typeof body.brand === "string" ? brandById(body.brand) : undefined;
-  if (!brand) return bad("STOCKBACK doesn't support this brand yet.", 422);
+  if (!brand) return bad("Zen doesn't support this brand yet.", 422);
   const { amount } = body;
   if (typeof amount !== "string" || !/^\d{1,10}(\.\d{1,2})?$/.test(amount)) return bad("Amount must be a number with up to 2 decimals");
   const [rupees, paise = ""] = amount.split(".");

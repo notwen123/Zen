@@ -1,4 +1,4 @@
-// STOCKBACK demo attester core. SERVER-ONLY (node:crypto, private keys).
+// Zen demo attester core. SERVER-ONLY (node:crypto, private keys).
 // Shared by the web API route (web/app/api/attest) and the CLI (tools/attester.mjs).
 //
 // DEMO attester: it trusts the receipt it is given. A production attester verifies the
@@ -9,8 +9,8 @@
 //   receiptHash = keccak256(abi.encode(keccak256(utf8(salt)), receiptRef))   // salted: short
 //                                                                             // refs can't be brute-forced
 // Signatures cover the EIP-712 digest bound to (chainId, registry):
-//   ECDSA   -> 65 bytes (r||s||v)              for ECDSAAttestationVerifier
-//   Ed25519 -> 96 bytes (pubkey 32 || sig 64)  for the Stylus ReceiptProver
+//   ECDSA   -> 65 bytes (r||s||v) for ECDSAAttestationVerifier, the registry's verifier on Monad.
+//   Ed25519 -> 96 bytes (pubkey 32 || sig 64), CLI-only (tools/attester.mjs); no Monad contract verifies it.
 import { createPrivateKey, createPublicKey, sign as nodeSign } from "node:crypto";
 import { encodeAbiParameters, hashStruct, hashTypedData, keccak256, stringToHex } from "viem";
 import { sign } from "viem/accounts";
@@ -62,7 +62,7 @@ export function claimId(claim) {
 
 export function claimDigest(claim, chainId, registry) {
   return hashTypedData({
-    domain: { name: "STOCKBACK", version: "1", chainId, verifyingContract: registry },
+    domain: { name: "Zen", version: "1", chainId, verifyingContract: registry },
     types: CLAIM_TYPES,
     primaryType: "PurchaseClaim",
     message: claim,
@@ -82,7 +82,7 @@ export function ed25519PublicKey(seedHex) {
   return "0x" + ed25519Key(seedHex).pub.toString("hex");
 }
 
-/** 96-byte attestation for the Stylus verifier: pubkey || signature over the 32-byte digest. */
+/** 96-byte Ed25519 attestation (pubkey || signature over the digest). Not accepted by the Monad registry. */
 export function attestEd25519(seedHex, digest) {
   const { priv, pub } = ed25519Key(seedHex);
   const sig = nodeSign(null, Buffer.from(digest.slice(2), "hex"), priv);

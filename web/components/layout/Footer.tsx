@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BrushStroke, Petals, Seal } from "@/components/art/Art";
-import { addressUrl, GITHUB_URL, robinhoodTestnet } from "@/lib/chain";
+import { addressUrl, GITHUB_URL, monadTestnet } from "@/lib/chain";
 import { contracts } from "@/lib/contracts";
 
 const PRODUCT = [
@@ -14,8 +14,7 @@ const PRODUCT = [
 const PROTOCOL = [
   ["GitHub", GITHUB_URL],
   ["Security", `${GITHUB_URL}/blob/main/SECURITY.md`],
-  ["Architecture", `${GITHUB_URL}/blob/main/docs/ARCHITECTURE.md`],
-  ["Benchmarks", `${GITHUB_URL}/blob/main/benchmarks/results/BENCHMARKS.md`],
+  ["Contracts", `${GITHUB_URL}/tree/main/src`],
 ] as const;
 
 const Label = ({ children }: { children: React.ReactNode }) => (
@@ -40,7 +39,7 @@ export function Footer() {
           href="/app/dashboard"
           className="ink-btn inline-flex min-h-11 items-center gap-3 self-start bg-ink px-6 py-3 text-[0.8rem] font-semibold uppercase tracking-[0.18em] text-paper md:self-auto"
         >
-          Start Stockback <span aria-hidden="true">→</span>
+          Start Zen <span aria-hidden="true">→</span>
         </Link>
       </div>
 
@@ -77,12 +76,20 @@ export function Footer() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-vermilion opacity-60" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-vermilion" />
             </span>
-            Live on {robinhoodTestnet.name}
+            Live on {monadTestnet.name}
           </p>
           <dl className="mt-4 space-y-1.5 font-mono text-xs text-muted">
             <div className="flex gap-3">
               <dt>Chain</dt>
-              <dd className="text-ink">{robinhoodTestnet.id}</dd>
+              <dd className="text-ink">{monadTestnet.id}</dd>
+            </div>
+            <div className="flex gap-3">
+              <dt>Claims</dt>
+              <dd>
+                <a className="ink-link text-ink" href={addressUrl(contracts.conditionalClaim)} target="_blank" rel="noreferrer">
+                  {contracts.conditionalClaim.slice(0, 6)}…{contracts.conditionalClaim.slice(-4)} ↗
+                </a>
+              </dd>
             </div>
             <div className="flex gap-3">
               <dt>Registry</dt>
@@ -94,7 +101,7 @@ export function Footer() {
             </div>
             <div className="flex gap-3">
               <dt>Verifier</dt>
-              <dd className="text-ink">Stylus · Ed25519</dd>
+              <dd className="text-ink">ECDSA · EIP-712</dd>
             </div>
           </dl>
         </div>
@@ -103,14 +110,14 @@ export function Footer() {
       {/* oversized wordmark */}
       <div aria-hidden="true" className="mt-14 select-none overflow-hidden px-2">
         <p className="whitespace-nowrap text-center font-display text-[13.4vw] font-extrabold leading-[0.78] tracking-[-0.02em] text-transparent [-webkit-text-stroke:1.2px_rgba(23,23,23,.35)] [mask-image:linear-gradient(to_bottom,black_35%,transparent)]">
-          STOCKBACK
+          ZEN
         </p>
       </div>
 
       {/* base line */}
       <div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-5 pb-8 pt-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-8">
         <p className="flex items-center gap-2.5">
-          <Seal size={16} />© 2026 STOCKBACK · Demo assets on testnet. Not securities, not brand partners.
+          <Seal size={16} />© 2026 Zen · Mock assets on Monad testnet. Not securities, not brand partners.
         </p>
         <a href="#main" className="ink-link self-start font-mono uppercase tracking-[0.2em] sm:self-auto">
           Back to top ↑

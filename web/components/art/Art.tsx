@@ -1,22 +1,23 @@
-// Hand-drawn SVG art for STOCKBACK. Server-safe, no JS; motion comes from CSS classes in globals.css.
+// Hand-drawn SVG art for Zen. Server-safe, no JS; motion comes from CSS classes in globals.css.
 import type { CSSProperties } from "react";
 
 type P = { className?: string; style?: CSSProperties };
 
-/** Circular red seal - the STOCKBACK mark. */
+/** Circular red seal - the Zen mark. */
 export function Seal({ className, style, size = 32 }: P & { size?: number }) {
   return (
     <svg viewBox="0 0 64 64" width={size} height={size} className={className} style={style} aria-hidden="true">
       <path
         d="M32 3.5c15.9 0 28.6 12.6 28.4 28.6-.2 15.7-12.8 28.3-28.6 28.4C16.1 60.6 3.4 47.9 3.5 32 3.6 16.2 16.2 3.4 32 3.5z"
-        fill="var(--stockback-red)"
+        fill="var(--zen-red)"
       />
       <path
-        d="M42 21.5c-2.6-2.4-6-3.6-9.6-3.6-5.6 0-9.4 2.9-9.4 7.1 0 9.2 19.3 5.5 19.3 14.6 0 4.5-4.2 7.6-10.1 7.6-4 0-7.8-1.4-10.6-4.1"
+        d="M21.5 20.5c6.8.4 13.8.2 21-.4-6.6 7.6-13.4 15.3-21.2 23.6 7.4-.5 14.4-.4 21.4.2"
         fill="none"
-        stroke="var(--stockback-paper)"
+        stroke="var(--zen-paper)"
         strokeWidth="4.2"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );
@@ -26,7 +27,7 @@ export function Wordmark({ className }: P) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
       <Seal size={26} />
-      <span className="font-display text-[1.05rem] font-bold tracking-[0.22em]">STOCKBACK</span>
+      <span className="font-display text-[1.05rem] font-bold tracking-[0.22em]">ZEN</span>
     </span>
   );
 }
@@ -126,7 +127,7 @@ export function BrushStroke({ className, style, delay = 900 }: P & { delay?: num
         className="draw"
         style={{ ["--len" as string]: 560, ["--delay" as string]: `${delay}ms`, ["--dur" as string]: "1100ms" }}
         d="M6 38c60-14 150-22 250-20 90 2 170 8 258-4"
-        stroke="var(--stockback-red)"
+        stroke="var(--zen-red)"
         strokeWidth="11"
         strokeLinecap="round"
       />
@@ -173,15 +174,15 @@ export function Petals({ className, count = 5 }: P & { count?: number }) {
   );
 }
 
-/** Small red seal badge: ROBINHOOD TESTNET · DEMO ASSETS. */
+/** Small red seal badge: MONAD TESTNET · MOCK ASSETS. */
 export function TestnetSeal({ className, compact = false }: P & { compact?: boolean }) {
   return (
     <span
       className={`inline-flex items-center gap-2 border border-vermilion/40 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.18em] text-vermilion-deep ${className ?? ""}`}
-      title="Robinhood Chain testnet. All brand assets are simulated demo tokens, not securities."
+      title="Monad testnet. All brand equity tokens are mocks, not securities, with no brand affiliation."
     >
       <span className="h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />
-      {compact ? "Testnet · Demo" : "Robinhood Testnet · Demo Assets"}
+      {compact ? "Testnet · Demo" : "Monad Testnet · Mock Assets"}
     </span>
   );
 }

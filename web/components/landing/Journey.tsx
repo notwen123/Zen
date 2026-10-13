@@ -11,19 +11,19 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const NIKE = brandById("NIKE")!;
 
 // Fingerprints of the receipt shown (Nike Store, Bengaluru · UPI ••••7421), derived with the
-// same attester code the app uses. `tx` is a real ₹2,000 Nike claim settled on Robinhood testnet.
+// same attester code the app uses. `tx` is a real Nike purchase -> conditional claim on Monad testnet.
 const REAL = {
   merchantId: "0x4acead6498578e2af4575124bcfe7934866ffd6c43923cc17fc7675ebb645121",
   receiptHash: "0xde3c4463b1c9e7b0f7b2d4c5a62f669663035c501197f7a64e82e56a9bda07a1",
-  tx: "0x4e2c8097030ef2b0842b0e6dbb79675437637dea04dfb7531d0938a13ff9c604",
+  tx: "0x9b0be7d442ade40acd7434cd5f3fee4065aa578acb416550893071f9eb8cfb8f",
 };
 const short = (h: string) => `${h.slice(0, 10)}…${h.slice(-6)}`;
 
 const CHAPTERS = [
   { key: "Scan", title: "A purchase, captured.", body: "Scan any receipt. It never leaves your hands." },
   { key: "Prove", title: "Hashed, not exposed.", body: "Merchant and receipt become fingerprints. No personal data goes on-chain." },
-  { key: "Verify", title: "Checked by Stylus.", body: "An Ed25519 signature, verified in Rust on Arbitrum. Each receipt counts once." },
-  { key: "Own", title: "Owned, not pointed.", body: "The reward lands as shares of the brand's vault, in your wallet." },
+  { key: "Verify", title: "Checked on Monad.", body: "The registry verifies the attester's ECDSA signature on-chain. Each receipt counts once." },
+  { key: "Own", title: "Owned, conditionally.", body: "The reward is mock equity escrowed in a claim, locked for the return window. Hold it to settle, or sell it now." },
 ];
 
 /** Pinned scroll story: one receipt, transformed step by step as you scroll. */
@@ -132,9 +132,9 @@ export function Journey() {
                       >
                         Verified
                         <br />
-                        Stylus
+                        on Monad
                         <br />
-                        Ed25519
+                        ECDSA
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -152,11 +152,11 @@ export function Journey() {
                     <BrandMark brand={NIKE} className="h-12 w-20 text-paper" />
                   </div>
                   <p className="mt-8 font-display text-5xl font-extrabold tabular">
-                    +15.00 <span className="text-2xl">sbNKE</span>
+                    +15.00 <span className="text-2xl">mNKE</span>
                   </p>
-                  <p className="mt-2 font-mono text-xs uppercase tracking-[0.2em] text-muted">Nike vault · ERC-4626 · demo asset</p>
+                  <p className="mt-2 font-mono text-xs uppercase tracking-[0.2em] text-muted">Conditional claim · locked · mock equity</p>
                   <a className="ink-link mt-5 font-mono text-xs" href={txUrl(REAL.tx)} target="_blank" rel="noreferrer">
-                    a real ₹2,000 Nike claim · {short(REAL.tx)} ↗
+                    a real Nike claim on Monad · {short(REAL.tx)} ↗
                   </a>
                 </motion.div>
               )}

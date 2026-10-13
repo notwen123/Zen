@@ -6,7 +6,8 @@ import { BrandMark } from "@/components/brand/BrandMark";
 import { Arrow, Button, ButtonLink, Eyebrow } from "@/components/ui/Button";
 import { BRANDS, brandById } from "@/lib/brands";
 import { EVIDENCE } from "@/lib/evidence";
-import type { MerchantReceipt } from "@/lib/stockback";
+import { RefundDesk } from "./RefundDesk";
+import type { MerchantReceipt } from "@/lib/zen";
 
 type Issued = { receipt: MerchantReceipt; payload: string; link: string; qr: string };
 
@@ -42,8 +43,8 @@ export function MerchantPos() {
   return (
     <div className="mx-auto max-w-[1320px] px-5 pb-24 pt-16 sm:px-8">
       <div className="border border-vermilion/50 bg-vermilion/5 px-4 py-3 text-sm text-vermilion-deep" role="note">
-        <strong>Simulated merchant.</strong> This point-of-sale is part of the STOCKBACK demo. It is not run by, or affiliated with, any brand shown. Receipts are signed with a demo
-        merchant key and rewards are testnet demo assets.
+        <strong>Simulated merchant.</strong> This point-of-sale and refund desk are part of the Zen demo. Neither is run by, or affiliated with, any brand shown. Receipts are signed with a demo
+        merchant key and rewards are mock equity tokens on Monad testnet, not securities.
       </div>
 
       <header className="mt-12 grid gap-6 md:grid-cols-[1fr_auto] md:items-end">
@@ -128,7 +129,7 @@ export function MerchantPos() {
                   <span className="tabular">₹{(Number(issued.receipt.amount) / 100).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</span>
                 </div>
                 <div className="mx-auto mt-6 w-56" role="img" aria-label="QR code of the signed receipt" dangerouslySetInnerHTML={{ __html: issued.qr }} />
-                <p className="mt-3 text-center text-[0.6rem] uppercase tracking-[0.18em] text-muted">Scan with STOCKBACK · Ed25519 signed</p>
+                <p className="mt-3 text-center text-[0.6rem] uppercase tracking-[0.18em] text-muted">Scan with Zen · merchant-signed</p>
               </motion.div>
             ) : (
               <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid min-h-[420px] place-items-center border border-dashed border-ink/20 p-10 text-center text-sm text-muted">
@@ -140,7 +141,7 @@ export function MerchantPos() {
           {issued && (
             <div className="mx-auto mt-8 flex max-w-md flex-wrap gap-3">
               <ButtonLink href={`/app/scan#r=${issued.payload}`}>
-                Claim in STOCKBACK <Arrow />
+                Claim in Zen <Arrow />
               </ButtonLink>
               <Button
                 variant="ghost"
@@ -156,6 +157,8 @@ export function MerchantPos() {
           )}
         </section>
       </div>
+
+      <RefundDesk />
     </div>
   );
 }

@@ -3,20 +3,20 @@ import Image from "next/image";
 import { Reveal, RevealLines } from "@/components/motion/Motion";
 import { Arrow, ButtonLink, Eyebrow } from "@/components/ui/Button";
 
-export const metadata: Metadata = { title: "How it works", description: "Ten stages from a paper receipt to on-chain ownership." };
+export const metadata: Metadata = { title: "How it works", description: "Ten stages from a receipt to a conditional equity claim that you can hold, sell, or see voided by a refund." };
 
 // Each stage: what the user experiences, and what actually happens.
 const STAGES = [
-  { t: "Purchase", u: "You buy something from a supported brand, as you always do.", tech: "Nothing on-chain yet. STOCKBACK never touches the payment.", icon: "M6 7h12l-1 13H7zM9 7a3 3 0 0 1 6 0" },
-  { t: "Evidence", u: "You scan the merchant's signed QR, or photograph a paper receipt.", tech: "Tier 1: a merchant-signed receipt (Ed25519 over every field; simulated merchant in this demo). Tier 2: tesseract.js OCR in the browser, every field editable, so authenticity is not established.", icon: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" },
-  { t: "Attestation", u: "The attester checks the evidence and signs a claim.", tech: "For merchant receipts the attester first verifies the merchant signature, expiry and prior use. It then signs the EIP-712 digest with Ed25519 (Stylus verifier) or ECDSA. Keys never reach the browser.", icon: "M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z" },
-  { t: "Commitment", u: "Your purchase becomes a fingerprint with no personal data.", tech: "claimId = EIP-712 hash of claimant, brand, merchant hash, salted receipt hash, amount, currency, time and deadline.", icon: "M8 8h8v8H8zM4 12h4M16 12h4M12 4v4M12 16v4" },
-  { t: "Nullifier", u: "The receipt can only ever be used once, by anyone.", tech: "nullifier = keccak256(tag, merchantId, receiptHash). Independent of wallet and amount, so re-issuing a receipt doesn't help.", icon: "M5 5l14 14M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z" },
-  { t: "Verification", u: "The signature is checked on-chain.", tech: "ReceiptCommitmentRegistry calls IReceiptVerifier.verify(digest, attestation). The active verifier is a Rust contract on Arbitrum Stylus checking strict Ed25519.", icon: "M5 12l4 4 10-10" },
-  { t: "Eligibility", u: "Brand, currency, amount and date must fit the program.", tech: "EligibilityPolicy: brand active, INR, ₹100 to ₹5,00,000, purchase within 30 days and not in the future; optional jurisdiction adapter.", icon: "M4 6h16M7 12h10M10 18h4" },
-  { t: "Reward", u: "Your reward is calculated by public rules.", tech: "RewardPolicy: amount × rate × multiplier, clipped to the per-claim cap; per-wallet and per-brand daily caps; paid only from sponsor budget.", icon: "M12 3v18M17 7H9.5a2.5 2.5 0 0 0 0 5h5a2.5 2.5 0 0 1 0 5H6" },
-  { t: "Brand vault", u: "The reward goes into that brand's vault, in your name.", tech: "RewardPool deposits the brand asset into its admin-less ERC-4626 BrandVault and mints shares to you. Steps 4 to 9 are one transaction.", icon: "M4 10h16v10H4zM2 10l10-6 10 6" },
-  { t: "Ownership", u: "You hold shares you control. Redeem them any time.", tech: "Portfolio reads vault balances live; activity reads registry events. Nobody but you can move your shares.", icon: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0" },
+  { t: "Purchase", u: "You buy something from a supported brand, as you always do.", tech: "Nothing on-chain yet. Zen never touches the payment.", icon: "M6 7h12l-1 13H7zM9 7a3 3 0 0 1 6 0" },
+  { t: "Evidence", u: "You scan the merchant's signed QR, or photograph a paper receipt.", tech: "Tier 1: a merchant-signed receipt (Ed25519 over every field, checked off-chain; simulated merchant in this demo). Tier 2: tesseract.js OCR in the browser, every field editable, so authenticity is not established.", icon: "M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" },
+  { t: "Attestation", u: "The attester checks the evidence and signs a claim.", tech: "For merchant receipts the attester first verifies the merchant signature, expiry and prior use. It then signs the EIP-712 digest with ECDSA. Keys never reach the browser.", icon: "M12 3l7 3v6c0 4-3 7.5-7 9-4-1.5-7-5-7-9V6z" },
+  { t: "Commitment", u: "Your purchase becomes a fingerprint with no personal data.", tech: "claimId = EIP-712 hash of claimant, brand, merchant hash, salted receipt hash, amount, currency, time and deadline. A nullifier keyed on merchant and receipt makes it count once, for anyone.", icon: "M8 8h8v8H8zM4 12h4M16 12h4M12 4v4M12 16v4" },
+  { t: "Verification", u: "The signature and the rules are checked on-chain.", tech: "ReceiptCommitmentRegistry calls the ECDSA attestation verifier, then EligibilityPolicy (brand, INR, amount, date) and RewardPolicy (rate, per-claim and daily caps, sponsor budget).", icon: "M5 12l4 4 10-10" },
+  { t: "Conditional claim", u: "Your reward is locked in a claim, not paid out yet.", tech: "RewardPool escrows the reward in mock tokenized equity and ConditionalClaim mints an ERC-721 with unlockAt = purchase time + the category's return window (5–10 min demo windows on testnet; 14–30 days in production). Stages 3 to 6 are one transaction.", icon: "M6 11h12v9H6zM9 11V8a3 3 0 0 1 6 0v3" },
+  { t: "Instant exit", u: "Don't want to wait? Sell the locked claim now.", tech: "InstantExitPool.quote prices it: amount × (1 − refund probability × wallet risk) × (1 − time value to unlock) × (1 − LP fee). sellClaim pays you in the equity token and the pool becomes the holder.", icon: "M5 12h14M13 6l6 6-6 6" },
+  { t: "Void", u: "If the purchase is refunded before unlock, the claim dies.", tech: "A refund attester signs an EIP-712 RefundAttestation(claimId, refundRef, deadline); VoidOracle checks it, burns refundRef so one refund can't void two claims, and the escrow returns to the sponsor. If a pool holds the claim, that is the LP's loss.", icon: "M6 6l12 12M18 6L6 18" },
+  { t: "Settle", u: "After the window closes, the equity is released.", tech: "Anyone can call settle(id) once unlockAt has passed. The escrowed equity goes to whoever holds the claim: you, or the pool that bought it, which books the gain.", icon: "M5 12l4 4 10-10M4 20h16" },
+  { t: "The market", u: "LPs earn by pricing refund risk well.", tech: "LPs deposit equity into a brand's pool and earn the discount on claims that settle, minus losses on claims voided by refunds. Every quote, sale, void and settlement is on Monad.", icon: "M4 19l5-6 4 3 7-9M4 5v14h16" },
 ];
 
 export default function HowItWorksPage() {
@@ -27,7 +27,7 @@ export default function HowItWorksPage() {
         <div className="mx-auto max-w-[1320px] px-5 pb-16 pt-24 sm:px-8">
           <Eyebrow>How it works</Eyebrow>
           <h1 className="mt-6 font-display text-[clamp(2.8rem,7vw,6rem)] font-extrabold leading-[0.96]">
-            <RevealLines lines={["From receipt", "to ownership,", "in ten stages."]} />
+            <RevealLines lines={["From receipt", "to tradeable claim,", "in ten stages."]} />
           </h1>
           <p className="mt-8 max-w-xl text-lg text-charcoal">Each stage in plain words, and what actually happens underneath.</p>
         </div>
@@ -55,7 +55,7 @@ export default function HowItWorksPage() {
 
       <div className="border-t border-ink/15 bg-paper-dark/40">
         <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-8 px-5 py-20 sm:px-8">
-          <p className="max-w-xl font-display text-3xl font-bold leading-tight">Try it with a demo receipt. It takes under a minute, on real testnet.</p>
+          <p className="max-w-xl font-display text-3xl font-bold leading-tight">Try it with a demo receipt. It takes under a minute, on Monad testnet.</p>
           <ButtonLink href="/app/scan">
             Scan a receipt <Arrow />
           </ButtonLink>

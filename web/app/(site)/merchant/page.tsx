@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { MerchantPos } from "@/components/merchant/MerchantPos";
 
 export const metadata: Metadata = {
-  title: "Merchant POS (simulated)",
-  description: "A simulated point-of-sale that issues merchant-signed receipt QR codes for the STOCKBACK demo.",
+  title: "Merchant desk (simulated)",
+  description: "A simulated merchant for the Zen demo: issue merchant-signed receipts, and issue refunds that void locked claims on Monad testnet.",
 };
 
 export default function MerchantPage() {

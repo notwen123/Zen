@@ -53,6 +53,6 @@ export function verifyMerchantReceipt(payload, { trustedKeys, supportedBrands, n
   // Checked only after the signature, so these errors can't be used to probe unsigned edits.
   if (Number(receipt.issuedAt) > now + skewSeconds) throw new ReceiptError("not_yet_valid", "Receipt is dated in the future");
   if (Number(receipt.expiresAt) <= now) throw new ReceiptError("expired", "This receipt has expired");
-  if (!supportedBrands.includes(receipt.brand)) throw new ReceiptError("unsupported_brand", "STOCKBACK doesn't support this brand");
+  if (!supportedBrands.includes(receipt.brand)) throw new ReceiptError("unsupported_brand", "Zen doesn't support this brand");
   return receipt;
 }

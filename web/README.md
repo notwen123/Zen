@@ -1,7 +1,10 @@
-# STOCKBACK web
+# Zen web
 
-The consumer app for STOCKBACK: **Scan. Prove. Own.** It runs on Next.js 16 (App Router), RainbowKit 2 with wagmi 2 and viem, Tailwind 4, `motion`, and in-browser OCR via tesseract.js.
-It talks to the **live Robinhood Chain testnet contracts** in `../deployments/46630.json`. There is no mocked chain state.
+Every stock-back reward is a locked, conditional equity claim, because the purchase can be refunded. Zen makes that claim a tradeable asset and creates the first onchain market that prices consumer refund risk, settled on Monad.
+
+Next.js 16 (App Router), RainbowKit 2 + wagmi 2 + viem, Tailwind 4, `motion`, in-browser OCR via tesseract.js. It talks to the live **Monad testnet** contracts (chain 10143) in `../deployments/10143.json`. Equity tokens and AUSD are mocks (not securities, no brand affiliation); the merchant is simulated; return windows are labelled 5–10 minute demo windows (production: 14–30 days).
+
+- RPC `https://testnet-rpc.monad.xyz` · explorer [MonadVision](https://testnet.monadvision.com) · gas from the [Monad faucet](https://faucet.monad.xyz)
 
 ## Run
 
@@ -9,62 +12,45 @@ It talks to the **live Robinhood Chain testnet contracts** in `../deployments/46
 cp .env.example .env.local   # fill values (see below)
 npm install
 npm run dev                  # http://localhost:3000
-npm run build && npm start   # production
-npm run lint && npm run typecheck && npm test   # eslint, tsc, receipt parser + 20 merchant-receipt unit tests
-npm run test:e2e             # 22 checks against a running server (BASE=…) and live testnet; CLAIMANT_KEY=… submits a real claim
+npm run lint && npm run typecheck && npm test   # eslint, tsc, receipt parser + merchant-receipt unit tests
+npm run test:e2e             # against a running server (BASE=…) and Monad testnet; CLAIMANT_KEY=… submits a real claim
 npm run check:secrets        # after build: no secret value in client bundles or git-tracked files
+npm run sync-contracts       # regenerate lib/generated/* from ../out and ../deployments/10143.json
 ```
 
 | Env | Where | Purpose |
 |---|---|---|
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | client (public) | RainbowKit / WalletConnect |
-| `ATTESTER_ED25519_SEED` | **server only** | Demo attester key for the Stylus Ed25519 verifier |
-| `ATTESTER_ECDSA_KEY` | **server only** | Demo attester key for the ECDSA verifier |
+| `ATTESTER_ECDSA_KEY` | **server only** | Demo attester: signs EIP-712 purchase claims (registry) and refund attestations (VoidOracle) |
 | `ATTESTER_SALT` | **server only** | Salt for receipt-reference hashing (privacy) |
-| `MERCHANT_ED25519_SEED` | **server only** | Simulated POS signing key. Must differ from the attester key. |
-| `MERCHANT_ED25519_PUBLIC_KEY` | server | Merchant public key the attester trusts for tier-1 receipts |
+| `MERCHANT_ED25519_SEED` | **server only**, optional | Simulated POS key for merchant-signed receipts (verified off-chain). Must differ from the attester key. |
+| `MERCHANT_ED25519_PUBLIC_KEY` | server, optional | Merchant public key the attester trusts for tier-1 receipts |
 
-Server secrets are read only in `app/api/attest/route.ts` and `app/api/merchant/receipt/route.ts`. `npm run check:secrets` verifies that no secret value appears in the client build or git-tracked files.
+Secrets are read only in `app/api/*`. Keys never reach the browser and are never returned or logged.
 
 ## Routes
 
-| Public | App (wallet required, Robinhood testnet) |
+| Public | App (wallet on Monad testnet) |
 |---|---|
-| `/` landing | `/app/dashboard` ownership, brands, recent activity |
-| `/how-it-works` ten stages | `/app/scan` camera / upload / demo receipt → claim |
-| `/supported-brands` live brand status | `/app/portfolio` vault positions |
-| `/about` manifesto | `/app/activity` claim timeline from chain events |
-| `/merchant` **simulated** POS: signed receipt + QR | |
-| | `/app/brands`, `/app/settings` |
+| `/` landing · `/how-it-works` · `/about` · `/supported-brands` | `/app/dashboard`, `/app/portfolio` your claims and countdowns |
+| `/merchant` **simulated** merchant: signed receipt QR + **Issue refund** desk | `/app/scan` receipt → attested claim |
+| | `/app/lp` instant-exit pools · `/app/activity` · `/app/brands` · `/app/settings` |
 
-## Merchant-signed receipt demo (tier 1)
+| API | Does |
+|---|---|
+| `POST /api/attest` | Verifies the evidence (merchant Ed25519 signature or user-confirmed fields), signs the ECDSA EIP-712 claim |
+| `POST /api/merchant/receipt` | Simulated POS: signs `ZEN-MERCHANT-RECEIPT-V1` over all receipt fields, returns a QR |
+| `POST /api/merchant/refund` | Simulated refund: checks the claim is Locked and before unlock, signs `RefundAttestation(claimId, refundRef, deadline)` for VoidOracle |
 
-1. Open `/merchant`, pick a brand and amount, and press **Issue signed receipt**. The server signs `STOCKBACK-MERCHANT-RECEIPT-V1` over all 8 fields with the demo merchant key (`lib/merchant-pos.mjs`). It returns the receipt and a QR of `/app/scan#r=SBR1.<receipt>.<signature>`.
-2. Scan the QR with a phone camera (it opens the app), use **Merchant QR** in `/app/scan` (in-app camera via `BarcodeDetector` where supported, image upload, or paste), or press **Claim in STOCKBACK**.
-3. `/app/scan` shows the receipt as **unverified display data**. **Verify signature** posts the raw payload to `/api/attest`, which checks:
-   - the signature against `MERCHANT_ED25519_PUBLIC_KEY`
-   - expiry
-   - the brand
-   - prior use, via on-chain `previewClaim`
+## Lifecycle
 
-   Only then does it sign the claim, deriving every reward field from the verified receipt.
-4. The rest of the flow is the normal claim flow below. Edited or replayed QRs are rejected (401 / 409).
+1. **Purchase → claim.** `submitClaim` verifies the ECDSA attestation, burns the receipt nullifier, applies eligibility and reward rules, escrows mock equity and mints a ConditionalClaim (ERC-721) locked until `unlockAt`.
+2. **Sell.** `InstantExitPool.sellClaim` buys a locked claim at a discount for refund risk, time to unlock and an LP fee.
+3. **Void.** A refund attestation before unlock: `VoidOracle.voidWithAttestation` returns the escrow to the sponsor. If the pool holds the claim, it is the LP's loss.
+4. **Settle.** After unlock anyone calls `settle`; the equity goes to the current holder.
 
-The merchant is **simulated** and the POS endpoint is public: anyone can mint demo receipts. On-chain caps and budgets bound the impact.
-
-## Claim flow (real)
-
-1. The receipt comes from the camera, an upload, or the demo receipt. OCR runs **on the device** (`lib/ocr.ts`, `lib/receipt-parse.ts`), and every field stays editable.
-2. `POST /api/attest` → `lib/attester-core.mjs` (shared with `../tools/attester.mjs`). It validates input, hashes identifiers (salted), and signs the EIP-712 digest with whichever scheme the registry's **active on-chain verifier** expects: Ed25519 for Stylus, or ECDSA.
-3. `previewClaim` runs every on-chain check as a dry run and shows ✓ Attested / ✓ New receipt / ✓ Eligible plus the reward.
-4. A pre-flight check (gas estimate and balance) catches rejections and missing testnet ETH before the wallet opens.
-5. `submitClaim` sends one transaction. The UI waits for the receipt, then shows the `RewardAllocated` amount and an explorer link.
-6. Portfolio and activity read vault balances and registry events live, with no indexer.
+Reads use contract state (claim ids are enumerated), never long `eth_getLogs` ranges: Monad's public RPC caps them at 100 blocks. Every write sets an explicit, tight gas limit (`GAS` in `lib/chain.ts`) because Monad bills the gas limit.
 
 ## Contract data
 
-`lib/generated/*` is generated by `npm run sync-contracts` from `../out` (forge build) and `../deployments/46630.json`. Do not edit it by hand.
-
-## Art
-
-`public/art/*` holds optimised WebP crops of the provided artwork; the originals are in `../public`. `public/brands/*` holds monochrome masks of the brand marks, drawn in ink by `<BrandMark>`. Brand names identify demo vaults only, with no partnership implied.
+`lib/generated/*` is generated by `npm run sync-contracts`. Do not edit it by hand.

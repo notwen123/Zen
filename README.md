@@ -74,7 +74,7 @@ flowchart LR
 - **Instant exit has to be instant.** The product promise is "cash out now". With 300 ms blocks and 600 ms full finality ([Monad docs](https://docs.monad.xyz/introduction/monad-for-developers)), a sell confirms before the user looks away; a sell that takes minutes is just another pending reward.
 - **Per-claim settlement must cost less than the reward.** Every purchase is its own claim, settled one by one. At Monad's 100 MON-gwei minimum base fee our measured transactions cost fractions of a cent (table under [Traction](#traction-real-testnet-transactions)), so a ₹450 coffee can still carry its own claim.
 - **Gas is billed on the gas *limit*.** Monad charges the limit, not gas used, so the deploy script, the seeding script and every frontend write set explicit, tight limits (`web/lib/chain.ts`, `GAS`).
-- **No Stylus, no problem.** The registry verifies attestations with the ECDSA verifier; Foundry 1.8.5 runs the whole suite with `network = "monad"` (Monad gas model and opcode pricing).
+- **Plain EVM, Monad-native tooling.** The registry verifies attestations with the ECDSA verifier; Foundry 1.8.5 runs the whole suite with `network = "monad"` (Monad gas model and opcode pricing).
 
 ---
 

@@ -8,10 +8,12 @@ import { join, resolve } from "node:path";
 
 const web = resolve(import.meta.dirname, "..");
 const root = resolve(web, "..");
-const NAMES = ["ATTESTER_ED25519_SEED", "ATTESTER_ECDSA_KEY", "ATTESTER_SALT", "MERCHANT_ED25519_SEED"];
+// ATTESTER_ECDSA_KEY signs claim and refund attestations; MERCHANT_ED25519_SEED is optional (simulated POS).
+const REQUIRED = ["ATTESTER_ECDSA_KEY", "ATTESTER_SALT"];
+const NAMES = [...REQUIRED, "MERCHANT_ED25519_SEED"];
 const secrets = NAMES.map((k) => [k, process.env[k]?.trim().replace(/^0x/, "").toLowerCase()]).filter(([, v]) => v && v.length >= 16);
-if (secrets.length < NAMES.length) {
-  console.error(`Missing secrets in env (${NAMES.length - secrets.length}); run with --env-file=.env.local`);
+if (REQUIRED.some((k) => !secrets.some(([n]) => n === k))) {
+  console.error("Missing ATTESTER_ECDSA_KEY or ATTESTER_SALT in env; run with --env-file=.env.local");
   process.exit(2);
 }
 

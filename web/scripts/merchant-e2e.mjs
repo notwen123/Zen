@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Integration test for the merchant-signed receipt path against a RUNNING server and the LIVE
-// Robinhood testnet deployment. Never prints secrets.
+// Monad testnet deployment. Never prints secrets.
 //
 //   node --env-file=.env.local scripts/merchant-e2e.mjs
 //   env: BASE (default http://localhost:3200)
@@ -15,10 +15,10 @@ import { receiptCommitmentRegistryAbi } from "../lib/generated/abis.ts";
 import { deployment } from "../lib/generated/deployment.ts";
 
 const BASE = process.env.BASE ?? "http://localhost:3200";
-const SECRETS = ["ATTESTER_ED25519_SEED", "ATTESTER_ECDSA_KEY", "ATTESTER_SALT", "MERCHANT_ED25519_SEED"]
+const SECRETS = ["ATTESTER_ECDSA_KEY", "ATTESTER_SALT", "MERCHANT_ED25519_SEED"]
   .map((k) => process.env[k]?.replace(/^0x/, "").toLowerCase())
   .filter(Boolean);
-const chain = { id: 46630, name: "Robinhood Chain Testnet", nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 }, rpcUrls: { default: { http: ["https://rpc.testnet.chain.robinhood.com"] } } };
+const chain = { id: 10143, name: "Monad Testnet", nativeCurrency: { name: "MON", symbol: "MON", decimals: 18 }, rpcUrls: { default: { http: ["https://testnet-rpc.monad.xyz"] } } };
 const pub = createPublicClient({ chain, transport: http() });
 
 let pass = 0, fail = 0, skip = 0;
@@ -86,12 +86,12 @@ if (seed) {
 const toClaim = (c) => ({ ...c, amount: BigInt(c.amount), purchasedAt: BigInt(c.purchasedAt), deadline: BigInt(c.deadline) });
 const claim = toClaim(good.body.claim);
 const [status, reward] = await pub.readContract({ address: deployment.registry, abi: receiptCommitmentRegistryAbi, functionName: "previewClaim", args: [claim, good.body.attestation] });
-ok("registry previewClaim accepts the claim (Stylus Ed25519 + eligibility)", status === 0 && reward > 0n, `status ${status}, reward ${reward}`);
+ok("registry previewClaim accepts the claim (ECDSA attestation + eligibility)", status === 0 && reward > 0n, `status ${status}, reward ${reward}`);
 
-// 5. Real claim on Robinhood testnet, then replay must fail
+// 5. Real claim on Monad testnet, then replay must fail
 if (claimantKey) {
   const wallet = createWalletClient({ account: claimant, chain, transport: http() });
-  const hash = await wallet.writeContract({ address: deployment.registry, abi: receiptCommitmentRegistryAbi, functionName: "submitClaim", args: [claim, good.body.attestation] });
+  const hash = await wallet.writeContract({ address: deployment.registry, abi: receiptCommitmentRegistryAbi, functionName: "submitClaim", args: [claim, good.body.attestation], gas: 900_000n }); // Monad bills the gas limit
   const rc = await pub.waitForTransactionReceipt({ hash });
   let assets;
   for (const log of rc.logs) {
@@ -100,7 +100,7 @@ if (claimantKey) {
       if (ev.eventName === "RewardAllocated") assets = ev.args.assets;
     } catch {}
   }
-  ok("merchant-signed claim settled on Robinhood testnet", rc.status === "success" && assets > 0n, `tx ${hash}, assets ${assets}`);
+  ok("merchant-signed claim minted on Monad testnet", rc.status === "success" && assets > 0n, `tx ${hash}, assets ${assets}`);
 
   const again = await post(BASE, "/api/attest", { claimant: claimant.address, signedReceipt: payload });
   ok("duplicate receipt rejected after claim (same wallet)", again.status === 409 && again.body.code === "already_claimed", `status ${again.status}`);

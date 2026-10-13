@@ -13,7 +13,7 @@ function Line({ dir }: { dir: 1 | -1 }) {
           <span key={`${r}-${w}`} className="flex items-center gap-10">
             <span
               className={`font-display text-[clamp(4rem,11vw,10rem)] font-extrabold uppercase leading-none tracking-[-0.01em] ${
-                w === "Own" ? "text-ink" : "text-transparent [-webkit-text-stroke:1.5px_var(--stockback-ink)]"
+                w === "Own" ? "text-ink" : "text-transparent [-webkit-text-stroke:1.5px_var(--zen-ink)]"
               }`}
             >
               {w}

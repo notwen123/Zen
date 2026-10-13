@@ -47,7 +47,7 @@ export function WalletGreeting() {
               {greeting()}
             </motion.p>
             <motion.h2 className="mt-4 font-display text-4xl font-bold sm:text-6xl" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5, duration: 0.8 }}>
-              Welcome to Stockback.
+              Welcome to Zen.
             </motion.h2>
             <motion.p className="mt-5 text-lg text-charcoal" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2, duration: 0.8 }}>
               Your purchases can now become ownership.

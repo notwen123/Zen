@@ -44,7 +44,7 @@ export function assertReceiptShape(r) {
 /** The exact UTF-8 string a merchant signs. */
 export function canonicalMessage(r) {
   assertReceiptShape(r);
-  return ["STOCKBACK-MERCHANT-RECEIPT-V1", ...RECEIPT_FIELDS.map(([k]) => `${k}=${r[k]}`)].join("\n");
+  return ["ZEN-MERCHANT-RECEIPT-V1", ...RECEIPT_FIELDS.map(([k]) => `${k}=${r[k]}`)].join("\n");
 }
 
 const enc = new TextEncoder();
@@ -67,12 +67,12 @@ export function encodeSignedReceipt(r, signature) {
 /** Accepts a raw payload or a link carrying it in "#r=" / "?r=". Returns { receipt, signature }.
  *  Shape is validated; the signature is NOT checked here (see merchant-pos.mjs). */
 export function decodeSignedReceipt(input) {
-  if (typeof input !== "string" || input.length > 2048) throw new ReceiptError("malformed", "Not a STOCKBACK receipt");
+  if (typeof input !== "string" || input.length > 2048) throw new ReceiptError("malformed", "Not a Zen receipt");
   let s = input.trim();
   const m = s.match(/[#?&]r=([^&#\s]+)/);
   if (m) s = decodeURIComponent(m[1]);
   const parts = s.split(".");
-  if (parts.length !== 3 || parts[0] !== RECEIPT_PREFIX) throw new ReceiptError("malformed", "Not a STOCKBACK receipt");
+  if (parts.length !== 3 || parts[0] !== RECEIPT_PREFIX) throw new ReceiptError("malformed", "Not a Zen receipt");
   let receipt;
   try {
     receipt = JSON.parse(dec.decode(unb64url(parts[1])));

@@ -4,11 +4,12 @@ import { useState, type ReactNode } from "react";
 import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
 import { useRouter } from "next/navigation";
 import { useMotionPref } from "@/app/providers";
-import { useVerifier } from "@/components/hooks/useStockback";
+import { useVerifier } from "@/components/hooks/useZen";
 import { Button } from "@/components/ui/Button";
-import { addressUrl, FAUCET_URL, robinhoodTestnet } from "@/lib/chain";
+import { addressUrl, FAUCET_URL, monadTestnet } from "@/lib/chain";
+import { BRANDS } from "@/lib/brands";
 import { contracts } from "@/lib/contracts";
-import { shortAddress } from "@/lib/stockback";
+import { shortAddress } from "@/lib/zen";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -24,6 +25,19 @@ const Row = ({ k, v }: { k: string; v: ReactNode }) => (
     <span className="break-all text-right font-mono text-xs">{v}</span>
   </div>
 );
+
+const CONTRACT_ROWS: [string, string][] = [
+  ["ConditionalClaim", contracts.conditionalClaim],
+  ["VoidOracle", contracts.voidOracle],
+  ["Registry", contracts.registry],
+  ["ECDSA verifier", contracts.ecdsaVerifier],
+  ["Eligibility policy", contracts.eligibilityPolicy],
+  ["Reward policy", contracts.rewardPolicy],
+  ["Reward pool", contracts.rewardPool],
+  ["Brand vault factory", contracts.factory],
+  ["AUSD reward adapter", contracts.ausdAdapter],
+  ...BRANDS.map((b): [string, string] => [`${b.name} exit pool (${b.asset})`, b.exitPool]),
+];
 
 export default function Settings() {
   const { address, chainId, connector } = useAccount();
@@ -65,14 +79,14 @@ export default function Settings() {
       </Section>
 
       <Section title="Network">
-        <Row k="Network" v={robinhoodTestnet.name} />
-        <Row k="Chain ID" v={`${chainId ?? "—"}${chainId === robinhoodTestnet.id ? " ✓" : ""}`} />
-        <Row k="RPC" v={robinhoodTestnet.rpcUrls.default.http[0]} />
-        <Row k="Explorer" v={<a className="ink-link" href={robinhoodTestnet.blockExplorers.default.url} target="_blank" rel="noreferrer">{robinhoodTestnet.blockExplorers.default.url} ↗</a>} />
+        <Row k="Network" v={monadTestnet.name} />
+        <Row k="Chain ID" v={`${chainId ?? "—"}${chainId === monadTestnet.id ? " ✓" : ""}`} />
+        <Row k="RPC" v={monadTestnet.rpcUrls.default.http[0]} />
+        <Row k="Explorer" v={<a className="ink-link" href={monadTestnet.blockExplorers.default.url} target="_blank" rel="noreferrer">{monadTestnet.blockExplorers.default.url} ↗</a>} />
         <div className="mt-6 flex flex-wrap gap-3">
-          {chainId !== robinhoodTestnet.id && <Button onClick={() => switchChain({ chainId: robinhoodTestnet.id })}>Switch network</Button>}
+          {chainId !== monadTestnet.id && <Button onClick={() => switchChain({ chainId: monadTestnet.id })}>Switch network</Button>}
           <a className="ink-link self-center text-sm" href={FAUCET_URL} target="_blank" rel="noreferrer">
-            Get testnet ETH ↗
+            Get testnet MON ↗
           </a>
         </div>
       </Section>
@@ -92,18 +106,22 @@ export default function Settings() {
       </Section>
 
       <Section title="Protocol">
-        <Row k="Contract version" v="STOCKBACK v1 · EIP-712 domain “STOCKBACK”/“1”" />
-        <Row k="Active verifier" v={verifier ? `${verifier.kind === "stylus" ? "Stylus Ed25519" : verifier.kind === "ecdsa" ? "ECDSA" : "Unknown"} · ${shortAddress(verifier.address)}` : "—"} />
-        {Object.entries(contracts).map(([k, a]) => (
-          <Row key={k} k={k.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase())} v={<a className="ink-link" href={addressUrl(a)} target="_blank" rel="noreferrer">{shortAddress(a)} ↗</a>} />
+        <Row k="EIP-712 domains" v="“Zen”/“1” (claims) · “Zen VoidOracle”/“1” (refunds)" />
+        <Row
+          k="Active verifier"
+          v={verifier ? <a className="ink-link" href={addressUrl(verifier.address)} target="_blank" rel="noreferrer">{verifier.kind === "ecdsa" ? "ECDSA" : "Unknown"} · {shortAddress(verifier.address)} ↗</a> : "—"}
+        />
+        {CONTRACT_ROWS.map(([k, a]) => (
+          <Row key={k} k={k} v={<a className="ink-link" href={addressUrl(a)} target="_blank" rel="noreferrer">{shortAddress(a)} ↗</a>} />
         ))}
       </Section>
 
       <Section title="Testnet">
         <p className="max-w-xl text-sm leading-relaxed text-charcoal">
-          STOCKBACK is running on Robinhood Chain testnet with simulated assets (mNKE, mAAPL, mSBUX and mock USDG). They are not securities and have
-          no monetary value. The attester used by this app is a demo service: it signs the receipt details you confirm and does not contact
-          merchants or payment networks. Rewards are bounded on-chain by per-claim and daily caps.
+          Zen is running on Monad testnet with mock tokenized-equity tokens (mNKE, mAAPL, mSBUX) and a mock AUSD. They are not securities, have no
+          monetary value and no affiliation with the brands named. Return windows are short, labelled demo windows (5–10 minutes) instead of the
+          14–30 days a production program would use. The attester is a demo service: it signs the receipt details you confirm and does not contact
+          merchants or payment networks, and the merchant refund desk is simulated. Rewards are bounded on-chain by per-claim and daily caps.
         </p>
       </Section>
     </div>

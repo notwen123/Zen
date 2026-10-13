@@ -9,9 +9,9 @@ const ui = Instrument_Sans({ subsets: ["latin"], variable: "--font-ui", display:
 const numeric = IBM_Plex_Mono({ weight: ["400", "500"], subsets: ["latin"], variable: "--font-numeric", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "STOCKBACK — Scan. Prove. Own.", template: "%s · STOCKBACK" },
+  title: { default: "Zen — a market for consumer refund risk", template: "%s · Zen" },
   description:
-    "STOCKBACK turns attested purchase receipts into on-chain ownership rewards through brand vaults on Robinhood Chain testnet. Demo assets only.",
+    "Every stock-back reward is a locked, conditional equity claim, because the purchase can be refunded. Zen makes that claim a tradeable asset and creates the first onchain market that prices consumer refund risk, settled on Monad. Testnet, mock assets only.",
 };
 
 export const viewport: Viewport = { themeColor: "#F4EFE3" };

@@ -6,12 +6,13 @@ import type { ReactNode } from "react";
 import { useAccount } from "wagmi";
 import { TestnetSeal, Wordmark } from "@/components/art/Art";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
-import { shortAddress } from "@/lib/stockback";
+import { shortAddress } from "@/lib/zen";
 
 const NAV = [
   { href: "/app/dashboard", label: "Dashboard", icon: "M3 11 12 3l9 8v10h-6v-6H9v6H3z" },
   { href: "/app/scan", label: "Scan receipt", icon: "M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M7 12h10" },
-  { href: "/app/portfolio", label: "Portfolio", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
+  { href: "/app/portfolio", label: "Locked equity", icon: "M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z" },
+  { href: "/app/lp", label: "LP terminal", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
   { href: "/app/activity", label: "Activity", icon: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" },
   { href: "/app/brands", label: "Brands", icon: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" },
   { href: "/how-it-works", label: "How it works", icon: "M9 9a3 3 0 1 1 4 2.8c-.6.3-1 .9-1 1.6V14M12 18h.01" },
@@ -35,7 +36,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[248px_1fr]">
       <aside className="sticky top-0 hidden h-dvh flex-col border-r border-ink/10 px-6 py-8 lg:flex" aria-label="App navigation">
-        <Link href="/" aria-label="STOCKBACK home">
+        <Link href="/" aria-label="Zen home">
           <Wordmark />
         </Link>
         <nav className="mt-14 flex-1">
@@ -62,14 +63,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           <p className="font-mono text-sm">{address ? shortAddress(address) : "Not connected"}</p>
           <p className="flex items-center gap-2 text-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />
-            Robinhood Testnet
+            Monad Testnet
           </p>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-col pb-24 lg:pb-0">
         <header className="flex items-center justify-between border-b border-ink/10 px-5 py-4 sm:px-8 lg:px-12">
-          <Link href="/" className="lg:hidden" aria-label="STOCKBACK home">
+          <Link href="/" className="lg:hidden" aria-label="Zen home">
             <Wordmark />
           </Link>
           <span className="hidden lg:block" />

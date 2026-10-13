@@ -1,6 +1,6 @@
 import { BrandMark } from "@/components/brand/BrandMark";
 import { brandById } from "@/lib/brands";
-import type { ReceiptInput } from "@/lib/stockback";
+import type { ReceiptInput } from "@/lib/zen";
 
 const fmtDate = (d: string) => {
   const t = Date.parse(`${d}T12:00:00Z`);

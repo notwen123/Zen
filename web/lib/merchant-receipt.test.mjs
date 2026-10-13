@@ -33,6 +33,11 @@ test("valid merchant signature verifies and returns every signed field", () => {
   assert.equal(receipt.brand, "NIKE");
 });
 
+test("signed message is domain-separated with the Zen V1 tag", () => {
+  const { receipt } = issue();
+  assert.ok(canonicalMessage(receipt).startsWith("ZEN-MERCHANT-RECEIPT-V1\nmerchantId="));
+});
+
 test("payload inside a deep link (#r= and ?r=) verifies", () => {
   const { payload } = issue();
   assert.equal(code(() => verifyMerchantReceipt(`https://x.app/app/scan#r=${encodeURIComponent(payload)}`, opts)), "ok");

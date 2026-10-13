@@ -7,31 +7,31 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import { decodeEventLog, type Hex } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
 import { Stamp } from "@/components/art/Art";
-import { useVerifier } from "@/components/hooks/useStockback";
+import { fmtTime, fmtUnits } from "@/components/claims/LockedEquity";
+import { useVerifier } from "@/components/hooks/useZen";
 import { VerificationPipeline } from "@/components/protocol/VerificationPipeline";
 import { Arrow, Button, ButtonLink, Eyebrow } from "@/components/ui/Button";
 import { BRANDS, brandById } from "@/lib/brands";
 import { FAUCET_URL } from "@/lib/chain";
 import { EVIDENCE, type Evidence } from "@/lib/evidence";
 import { decodeSignedReceipt } from "@/lib/merchant-receipt.mjs";
-import { receiptCommitmentRegistryAbi } from "@/lib/contracts";
+import { conditionalClaimAbi } from "@/lib/contracts";
 import { readReceipt } from "@/lib/ocr";
 import {
   CLAIM_STATUS,
   classifyClaimError,
   getClaimStatus,
   getTransactionUrl,
-  inr,
   prepareClaim,
   prepareMerchantClaim,
   publicClient,
   submitClaimRequest,
-  units,
   type AttestedClaim,
   type ClaimError,
   type MerchantReceipt,
   type ReceiptInput,
-} from "@/lib/stockback";
+  type VerifierKind,
+} from "@/lib/zen";
 import { QrScanner } from "./QrScanner";
 import { ReceiptCard } from "./ReceiptCard";
 
@@ -45,7 +45,7 @@ type Stage =
   | { s: "preview"; claim: AttestedClaim; status: number; reward: bigint }
   | { s: "signing"; claim: AttestedClaim; reward: bigint }
   | { s: "confirming"; claim: AttestedClaim; reward: bigint; hash: Hex }
-  | { s: "done"; claim: AttestedClaim; assets: bigint; hash: Hex }
+  | { s: "done"; claim: AttestedClaim; amount: bigint; unlockAt?: number; claimId?: bigint; hash: Hex }
   | { s: "error"; error: ClaimError; claim?: AttestedClaim; reward?: bigint };
 
 const today = () => {
@@ -84,7 +84,7 @@ export function ScanFlow() {
       setForm(receiptToForm(receipt as MerchantReceipt));
       setStage({ s: "merchant", payload: decodeURIComponent(payload) });
     } catch {
-      setStage({ s: "error", error: { kind: "receipt", message: "This QR code isn't a valid STOCKBACK receipt." } });
+      setStage({ s: "error", error: { kind: "receipt", message: "This QR code isn't a valid Zen receipt." } });
     }
   }, []);
 
@@ -168,7 +168,7 @@ export function ScanFlow() {
     }
   }
 
-  async function claimOwnership(claim: AttestedClaim, reward: bigint) {
+  async function claimReward(claim: AttestedClaim, reward: bigint) {
     if (!address) return;
     const req = submitClaimRequest(claim);
     try {
@@ -186,19 +186,21 @@ export function ScanFlow() {
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
       if (receipt.status !== "success") return setStage({ s: "error", error: { kind: "other", detail: `Transaction reverted: ${hash}` }, claim, reward });
 
-      let assets = reward;
+      // The reward is minted as a locked conditional claim: read its id, amount and unlock time from ClaimMinted.
+      let minted: { amount: bigint; unlockAt?: number; claimId?: bigint } = { amount: reward };
       for (const log of receipt.logs) {
         try {
-          const ev = decodeEventLog({ abi: receiptCommitmentRegistryAbi, data: log.data, topics: log.topics });
-          if (ev.eventName === "RewardAllocated") assets = ev.args.assets;
+          const ev = decodeEventLog({ abi: conditionalClaimAbi, data: log.data, topics: log.topics });
+          if (ev.eventName === "ClaimMinted") minted = { amount: ev.args.amount, unlockAt: Number(ev.args.unlockAt), claimId: ev.args.id };
         } catch {}
       }
       // Refetch (including inactive, cached pages) before showing success, so no screen shows pre-claim data.
       await Promise.all([
-        qc.invalidateQueries({ queryKey: ["portfolio"], refetchType: "all" }),
+        qc.invalidateQueries({ queryKey: ["claims"], refetchType: "all" }),
         qc.invalidateQueries({ queryKey: ["activity"], refetchType: "all" }),
+        qc.invalidateQueries({ queryKey: ["pools"], refetchType: "all" }),
       ]).catch(() => {});
-      setStage({ s: "done", claim, assets, hash });
+      setStage({ s: "done", claim, ...minted, hash });
     } catch (e) {
       setStage({ s: "error", error: classifyClaimError(e), claim, reward });
     }
@@ -268,7 +270,7 @@ export function ScanFlow() {
 
           {stage.s === "review" && (
             <Split visual={stage.preview ? <ImagePreview src={stage.preview} /> : <ReceiptCard r={form} demo={stage.demo} className="float" />}>
-              <p className="text-sm text-charcoal">{stage.note ?? "A demo purchase, attested by the STOCKBACK demo attester and claimed for real on Robinhood testnet."}</p>
+              <p className="text-sm text-charcoal">{stage.note ?? "A demo purchase, attested by the Zen demo attester and claimed for real on Monad testnet."}</p>
               <ReceiptForm form={form} setForm={setForm} />
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button onClick={prove} disabled={!form.amount || !form.receiptRef || !form.merchant}>
@@ -304,14 +306,17 @@ export function ScanFlow() {
               {stage.status === 0 ? (
                 <>
                   <div className="mt-8 border-t border-ink/15 pt-6">
-                    <p className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">Ownership reward</p>
-                    <p className="mt-2 font-display text-5xl font-bold tabular">{inr(units(stage.reward))}</p>
-                    <p className="mt-1 font-mono text-xs text-muted">
-                      {units(stage.reward).toLocaleString("en-IN", { maximumFractionDigits: 4 })} {brand.asset} → {brand.name} vault ({brand.share}) · demo units
+                    <p className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">Locked equity reward</p>
+                    <p className="mt-2 font-display text-5xl font-bold tabular">
+                      {fmtUnits(stage.reward)} <span className="text-3xl">{brand.asset}</span>
+                    </p>
+                    <p className="mt-2 text-sm text-muted">
+                      Minted as a locked conditional claim on {brand.name} demo equity. It unlocks when the {brand.category.toLowerCase()} return window
+                      closes; a refund before then voids it. You can cash it out early at a discount.
                     </p>
                   </div>
-                  <Button className="mt-8" onClick={() => claimOwnership(stage.claim, stage.reward)}>
-                    Claim ownership <Arrow />
+                  <Button className="mt-8" onClick={() => claimReward(stage.claim, stage.reward)}>
+                    Claim locked equity <Arrow />
                   </Button>
                 </>
               ) : (
@@ -323,15 +328,15 @@ export function ScanFlow() {
           {(stage.s === "signing" || stage.s === "confirming") && (
             <div>
               <p className="font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">
-                {stage.s === "signing" ? "Wallet signature" : "Verifying on Robinhood testnet"}
+                {stage.s === "signing" ? "Wallet signature" : "Verifying on Monad testnet"}
               </p>
               <h2 className="mt-3 font-display text-3xl font-bold">
-                {stage.s === "signing" ? "Approve “Create ownership” in your wallet." : vkind === "stylus" ? "Verifying with Stylus…" : "Verifying purchase…"}
+                {stage.s === "signing" ? "Approve the claim in your wallet." : "Verifying purchase…"}
               </h2>
               <p className="mt-2 text-sm text-muted">
                 {stage.s === "signing"
-                  ? `One transaction on Robinhood Chain testnet. Reward ${inr(units(stage.reward))} in ${brand.asset}.`
-                  : "Commitment, nullifier, signature, eligibility, reward and vault deposit all run inside this one transaction."}
+                  ? `One transaction on Monad testnet. Mints a locked claim on ${fmtUnits(stage.reward)} ${brand.asset}.`
+                  : "Commitment, nullifier, signature, eligibility and the equity escrow all run inside this one transaction."}
               </p>
               <div className="mt-8">
                 <VerificationPipeline phase={stage.s === "signing" ? "waiting" : "running"} verifier={vkind} />
@@ -344,12 +349,12 @@ export function ScanFlow() {
             </div>
           )}
 
-          {stage.s === "done" && <Done evidence={stage.claim.evidence} brandName={brand.name} asset={brand.asset} assets={stage.assets} hash={stage.hash} vkind={vkind} onAgain={() => setStage({ s: "choose" })} />}
+          {stage.s === "done" && <Done stage={stage} asset={brand.asset} vkind={vkind} onAgain={() => setStage({ s: "choose" })} />}
 
           {stage.s === "error" && (
             <ErrorPanel
               error={stage.error}
-              onRetry={() => (stage.claim ? claimOwnership(stage.claim, stage.reward ?? 0n) : setStage({ s: "review", demo: false }))}
+              onRetry={() => (stage.claim ? claimReward(stage.claim, stage.reward ?? 0n) : setStage({ s: "review", demo: false }))}
               onEdit={() => setStage(stage.error.kind === "receipt" || stage.claim?.evidence === "merchant-signed" ? { s: "choose" } : { s: "review", demo: false })}
             />
           )}
@@ -442,7 +447,7 @@ function ReceiptForm({ form, setForm }: { form: ReceiptInput; setForm: (f: Recei
         <select className={input} value={form.brand} onChange={set("brand")}>
           {BRANDS.map((b) => (
             <option key={b.id} value={b.id}>
-              {b.name} (demo vault)
+              {b.name} · {b.asset} (demo equity)
             </option>
           ))}
         </select>
@@ -507,9 +512,9 @@ function StatusProblem({ status, onEdit }: { status: number; onEdit: () => void 
 function ErrorPanel({ error, onRetry, onEdit }: { error: ClaimError; onRetry: () => void; onEdit: () => void }) {
   const copy =
     error.kind === "funds"
-      ? { t: "Your wallet needs testnet ETH to create ownership.", b: "Claims cost a tiny amount of Robinhood testnet ETH for gas." }
+      ? { t: "Your wallet needs testnet MON to claim.", b: "Claims cost a tiny amount of Monad testnet MON for gas." }
       : error.kind === "rejected"
-        ? { t: "Ownership wasn't created.", b: "The request was declined in your wallet. Nothing was spent." }
+        ? { t: "Nothing was claimed.", b: "The request was declined in your wallet. Nothing was spent." }
         : error.kind === "status"
           ? { t: CLAIM_STATUS[error.status]?.title ?? "Not eligible", b: CLAIM_STATUS[error.status]?.body ?? "" }
           : error.kind === "receipt"
@@ -523,7 +528,7 @@ function ErrorPanel({ error, onRetry, onEdit }: { error: ClaimError; onRetry: ()
       <div className="mt-8 flex flex-wrap gap-3">
         {error.kind === "funds" && (
           <ButtonLink href={FAUCET_URL} external>
-            Get testnet ETH <Arrow />
+            Get testnet MON <Arrow />
           </ButtonLink>
         )}
         {error.kind === "receipt" ? (
@@ -546,35 +551,44 @@ function ErrorPanel({ error, onRetry, onEdit }: { error: ClaimError; onRetry: ()
   );
 }
 
-function Done({ evidence, brandName, asset, assets, hash, vkind, onAgain }: { evidence: Evidence; brandName: string; asset: string; assets: bigint; hash: Hex; vkind: string; onAgain: () => void }) {
+function Done({ stage, asset, vkind, onAgain }: { stage: Extract<Stage, { s: "done" }>; asset: string; vkind: VerifierKind; onAgain: () => void }) {
+  const { amount, unlockAt, claimId, hash } = stage;
   return (
     <div className="grid items-center gap-12 md:grid-cols-[1fr_1.1fr]">
       <div className="relative grid place-items-center py-10">
         <motion.div initial={{ scale: 2.2, opacity: 0, rotate: -30 }} animate={{ scale: 1, opacity: 1, rotate: -8 }} transition={{ duration: 0.45, ease: [0.3, 1.4, 0.5, 1] }}>
-          <Stamp label="Ownership created" className="h-52 w-52 text-center text-lg" />
+          <Stamp label="Equity locked" className="h-52 w-52 text-center text-lg" />
         </motion.div>
       </div>
       <div>
-        <VerificationPipeline phase="done" verifier={vkind as "stylus"} />
-        <p className="mt-10 font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">{brandName} vault</p>
-        <p className="mt-2 font-display text-6xl font-bold tabular">+{inr(units(assets))}</p>
-        <p className="mt-1 font-mono text-xs text-muted">
-          {units(assets).toLocaleString("en-IN", { maximumFractionDigits: 4 })} {asset} of demo exposure · confirmed on Robinhood testnet
+        <VerificationPipeline phase="done" verifier={vkind} />
+        <p className="mt-10 font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted">Locked conditional claim{claimId !== undefined && ` #${claimId}`}</p>
+        <p className="mt-2 font-display text-6xl font-bold tabular">
+          +{fmtUnits(amount)} <span className="text-4xl">{asset}</span>
         </p>
-        <p className="mt-3 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted">Evidence: {EVIDENCE[evidence].label}</p>
+        <p className="mt-4 max-w-md text-charcoal" role="status">
+          Your {fmtUnits(amount)} {asset} is locked until {unlockAt ? fmtTime(unlockAt) : "its return window closes"} (return window). Cash out now or wait.
+        </p>
+        <p className="mt-2 max-w-md text-sm text-muted">
+          If the purchase is refunded before then, the claim is voided. After it unlocks, settle it and the {asset} is yours.
+        </p>
+        <p className="mt-3 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-muted">Evidence: {EVIDENCE[stage.claim.evidence].label}</p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <ButtonLink href={getTransactionUrl(hash)} external>
-            View transaction <Arrow />
+          <ButtonLink href="/app/portfolio">
+            Cash out or wait <Arrow />
           </ButtonLink>
-          <ButtonLink href="/app/portfolio" variant="ghost">
-            View portfolio
+          <ButtonLink href={getTransactionUrl(hash)} variant="ghost" external>
+            View transaction
           </ButtonLink>
         </div>
         <button type="button" onClick={onAgain} className="ink-link mt-6 text-sm">
           Scan another receipt
         </button>
         <p className="mt-6 text-xs text-muted">
-          Transaction <Link className="ink-link font-mono" href={getTransactionUrl(hash)} target="_blank">{hash.slice(0, 10)}…{hash.slice(-6)}</Link>
+          Transaction{" "}
+          <a className="ink-link font-mono" href={getTransactionUrl(hash)} target="_blank" rel="noreferrer">
+            {hash.slice(0, 10)}…{hash.slice(-6)}
+          </a>
         </p>
       </div>
     </div>

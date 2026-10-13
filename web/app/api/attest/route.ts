@@ -1,13 +1,13 @@
 import "server-only";
 import { isAddress, getAddress } from "viem";
-import { attestECDSA, attestEd25519, buildClaim, claimDigest, claimId } from "@/lib/attester-core.mjs";
+import { attestECDSA, buildClaim, claimDigest, claimId } from "@/lib/attester-core.mjs";
 import { BRANDS, brandById } from "@/lib/brands";
-import { robinhoodTestnet } from "@/lib/chain";
+import { monadTestnet } from "@/lib/chain";
 import { contracts, receiptCommitmentRegistryAbi } from "@/lib/contracts";
 import { verifyMerchantReceipt } from "@/lib/merchant-pos.mjs";
 import { ReceiptError } from "@/lib/merchant-receipt.mjs";
 import { rateLimiter } from "@/lib/rate-limit";
-import { CLAIM_STATUS, getActiveVerifier, publicClient } from "@/lib/stockback";
+import { CLAIM_STATUS, getActiveVerifier, publicClient } from "@/lib/zen";
 
 // DEMO ATTESTER. Two evidence paths (see docs/SECURITY.md, "Evidence tiers"):
 //   1. signedReceipt: a merchant-signed receipt. The attester verifies the Ed25519 signature against
@@ -17,7 +17,6 @@ import { CLAIM_STATUS, getActiveVerifier, publicClient } from "@/lib/stockback";
 // Either way rewards stay bounded on-chain by per-claim / daily caps, the sponsor budget and the
 // per-receipt nullifier.
 
-const SEED = process.env.ATTESTER_ED25519_SEED;
 const ECDSA_KEY = process.env.ATTESTER_ECDSA_KEY as `0x${string}` | undefined;
 const SALT = process.env.ATTESTER_SALT;
 const MERCHANT_PUB = process.env.MERCHANT_ED25519_PUBLIC_KEY;
@@ -25,31 +24,29 @@ const MERCHANT_PUB = process.env.MERCHANT_ED25519_PUBLIC_KEY;
 const limited = rateLimiter(20, 10 * 60_000);
 const NULLIFIER_USED = CLAIM_STATUS.findIndex((s) => s.key === "NullifierUsed");
 
-// Active verifier is read from chain so the scheme always matches what the registry will check.
-let verifierCache: { kind: string; at: number } | undefined;
-async function activeScheme(): Promise<"ed25519" | "ecdsa"> {
-  if (!verifierCache || Date.now() - verifierCache.at > 60_000) {
-    verifierCache = { kind: (await getActiveVerifier()).kind, at: Date.now() };
-  }
-  if (verifierCache.kind === "stylus") return "ed25519";
-  if (verifierCache.kind === "ecdsa") return "ecdsa";
-  throw new Error("Registry verifier is not a known STOCKBACK verifier");
+// The registry on Monad verifies ECDSA attestations only. Confirm that is still the active verifier
+// (cached for a minute) so we never sign for a verifier the registry would not call.
+let verifiedAt = 0;
+async function assertEcdsaVerifier() {
+  if (Date.now() - verifiedAt < 60_000) return;
+  if ((await getActiveVerifier()).kind !== "ecdsa") throw new Error("Registry verifier is not the Zen ECDSA verifier");
+  verifiedAt = Date.now();
 }
 
 const bad = (error: string, status = 400, code?: string) => Response.json({ error, code }, { status });
 
 const RECEIPT_ERRORS: Record<string, [number, string]> = {
-  malformed: [400, "This QR code isn't a valid STOCKBACK receipt."],
+  malformed: [400, "This QR code isn't a valid Zen receipt."],
   bad_signature: [401, "The merchant signature doesn't match this receipt. It may have been altered."],
   expired: [410, "This receipt has expired. Ask the merchant for a new one."],
   not_yet_valid: [400, "This receipt is dated in the future."],
-  unsupported_brand: [422, "STOCKBACK doesn't support this brand yet."],
+  unsupported_brand: [422, "Zen doesn't support this brand yet."],
 };
 
 type Receipt = { brand: string; merchant: string; receiptRef: string; amount: bigint; currency: string; purchasedAt: number; validFor: number };
 
 export async function POST(req: Request) {
-  if (!SALT || (!SEED && !ECDSA_KEY)) return bad("Attester is not configured", 503);
+  if (!SALT || !ECDSA_KEY) return bad("Attester is not configured", 503);
   if (limited(req)) return bad("Too many requests. Try again in a few minutes.", 429);
 
   let body: Record<string, unknown>;
@@ -98,7 +95,7 @@ export async function POST(req: Request) {
     // ---- Tier 2: user-confirmed fields (photo/OCR or typed)
     const { brand, merchant, receiptRef, amount, currency, date } = body as Record<string, string>;
     const b = typeof brand === "string" ? brandById(brand) : undefined;
-    if (!b) return bad("STOCKBACK doesn't support this brand yet.", 422);
+    if (!b) return bad("Zen doesn't support this brand yet.", 422);
     if (typeof merchant !== "string" || !merchant.trim() || merchant.length > 80) return bad("Merchant name is required (max 80 characters)");
     if (typeof receiptRef !== "string" || !/^[A-Za-z0-9#/_.:-]{3,64}$/.test(receiptRef.trim()))
       return bad("Receipt ID must be 3-64 letters, numbers or - _ . / # :");
@@ -123,12 +120,10 @@ export async function POST(req: Request) {
   }
 
   try {
-    const scheme = await activeScheme();
+    await assertEcdsaVerifier();
     const claim = buildClaim({ claimant: getAddress(claimant), ...r, validForSeconds: r.validFor }, SALT, now);
-    const digest = claimDigest(claim, robinhoodTestnet.id, contracts.registry);
-    const attestation =
-      scheme === "ed25519" ? (SEED ? attestEd25519(SEED, digest) : null) : ECDSA_KEY ? await attestECDSA(ECDSA_KEY, digest) : null;
-    if (!attestation) return bad(`Attester has no ${scheme} key configured`, 503);
+    const digest = claimDigest(claim, monadTestnet.id, contracts.registry);
+    const attestation = await attestECDSA(ECDSA_KEY, digest);
 
     if (evidence === "merchant-signed") {
       // Reject receipt IDs already used on-chain (the registry would revert anyway; this fails early).
@@ -145,7 +140,7 @@ export async function POST(req: Request) {
       claim: Object.fromEntries(Object.entries(claim).map(([k, v]) => [k, typeof v === "bigint" ? v.toString() : v])),
       claimId: claimId(claim),
       attestation,
-      scheme,
+      scheme: "ecdsa",
       evidence,
       receipt: verifiedReceipt,
       demo: true,

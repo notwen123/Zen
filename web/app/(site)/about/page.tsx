@@ -4,51 +4,55 @@ import { Reveal, RevealLines } from "@/components/motion/Motion";
 import { Arrow, ButtonLink, Eyebrow } from "@/components/ui/Button";
 import { GITHUB_URL } from "@/lib/chain";
 
-export const metadata: Metadata = { title: "About", description: "Ownership should follow participation. The STOCKBACK manifesto." };
+export const metadata: Metadata = {
+  title: "About",
+  description: "Every stock-back reward is a conditional equity claim. Zen makes it tradeable and prices consumer refund risk on Monad.",
+};
 
 const CHAPTERS = [
   {
-    t: "Why STOCKBACK exists",
+    t: "Why Zen exists",
     b: [
-      "Every day people fund the brands they love: coffee in the morning, shoes for the season, a new phone every few years. That spending builds companies, but the customer keeps nothing except a receipt.",
-      "STOCKBACK starts from a simple idea: an attested purchase can become a small stake in what you buy.",
+      "Every stock-back reward is a locked, conditional equity claim, because the purchase can be refunded. Until the return window closes, the reward isn't really yours: it can still disappear.",
+      "Zen makes that claim a tradeable asset and creates the first onchain market that prices consumer refund risk, settled on Monad.",
     ],
   },
   {
     t: "The problem",
     b: [
-      "Loyalty points are closed-loop, lose value and quietly expire. Crypto cashback usually pays in tokens unrelated to what you bought, and rarely proves the purchase happened, or happened only once.",
+      "Stock-back programs either pay out at once and eat the refunds, or make customers wait weeks for something they can't use. Loyalty points dodge the question by being closed-loop and expiring. Nobody prices the risk in between.",
     ],
   },
   {
-    t: "The protocol",
+    t: "The claim",
     b: [
-      "Evidence stays off-chain. An attester signs a claim that contains only hashes. On-chain, one transaction checks the signature, burns a nullifier so the receipt can never count twice, applies eligibility and reward rules, and deposits shares into the brand's vault in your name.",
-      "Evidence comes in tiers. A merchant-signed receipt is checked against the merchant's key before the attester signs, so no field can be changed after the sale; in this demo the merchant is simulated. A photo or typed receipt is only attested: the attester signs what it was given. Proof taken from the payment or order source itself is on the roadmap, not built.",
+      "A verified purchase mints a conditional claim: an ERC-721 that escrows the reward in (mock) tokenized equity and is locked until the purchase's return window closes. On testnet those windows are labelled 5 to 10 minute demo windows; in production they would be 14 to 30 days.",
+      "From there, one of three things happens. A refund proven before unlock voids the claim and the escrow returns to the sponsor. After unlock, anyone can settle it and the equity goes to whoever holds the claim. Or, at any point in between, the holder can sell it.",
+    ],
+  },
+  {
+    t: "The market",
+    b: [
+      "Each brand has an instant-exit pool. Liquidity providers deposit the equity token; a shopper holding a locked claim can sell it to the pool immediately, at a discount that prices the chance of a refund (per category, and higher for wallets with a history of voids), the time left to unlock, and an LP fee.",
+      "If the claim settles, the pool earns the discount. If the purchase is refunded, the pool loses what it paid. That is a market for consumer refund risk, with every price and outcome on-chain.",
     ],
   },
   {
     t: "Why proof matters",
     b: [
-      "Rewards without proof invite fraud; proof without limits invites abuse. STOCKBACK separates the two. A merchant signature shows a receipt is unaltered; a photo attestation does not show a purchase happened, and AI can now forge receipt photos convincingly. Caps and budgets bound what any wallet or brand can earn either way. We are explicit about the limits: a nullifier stops the same receipt counting twice, not someone with many wallets and many receipts.",
+      "Rewards without proof invite fraud; proof without limits invites abuse. Zen separates the two. A merchant signature shows a receipt is unaltered; a photo attestation does not show a purchase happened, and AI can now forge receipt photos convincingly. Caps and budgets bound what any wallet or brand can earn either way. A nullifier stops the same receipt counting twice, and a refund reference stops one refund voiding two claims, but neither stops someone with many wallets and many receipts.",
     ],
   },
   {
-    t: "Why Stylus",
+    t: "Why Monad",
     b: [
-      "Many services sign with Ed25519, which the EVM cannot verify natively. STOCKBACK verifies those signatures in Rust on Arbitrum Stylus. Measured on Robinhood Chain testnet, that costs 5 to 9 times less gas than the best Solidity implementation available, and 100 signatures fit in one transaction.",
+      "An instant exit only means something if it is instant. Monad's sub-second finality makes the sale final about as fast as the wallet confirms it, and its low fees make it practical to mint, sell, void and settle every claim on its own instead of batching. It is plain EVM: Solidity contracts, EIP-712 attestations verified with ECDSA.",
     ],
   },
   {
-    t: "Why tokenized ownership",
+    t: "What is real, and what is not",
     b: [
-      "A vault share is portable, composable and yours: no issuer can expire it or claw it back. On testnet the brand assets are simulated. In production, distributing exposure to tokenized equities would require issuer authorization and legal review, and the protocol is built so that compliance plugs in as an adapter.",
-    ],
-  },
-  {
-    t: "The long-term vision",
-    b: [
-      "A world where ownership follows participation: where the people who build a brand's revenue also share in its future, verified and without middlemen.",
+      "The contracts, claims, pools, voids and settlements are real and live on Monad testnet. The equity tokens are mocks: not securities, with no affiliation to the brands named. The merchant is simulated. In production, distributing exposure to tokenized equities would require issuer authorization and legal review.",
     ],
   },
 ];
@@ -61,14 +65,14 @@ export default function About() {
           <div>
             <Eyebrow>Manifesto</Eyebrow>
             <h1 className="mt-6 font-display text-[clamp(3rem,8vw,6.6rem)] font-extrabold leading-[0.95]">
-              <RevealLines lines={["Ownership", "should follow", "participation."]} />
+              <RevealLines lines={["Rewards are", "claims. Claims", "can trade."]} />
             </h1>
             <Reveal delay={0.4} className="mt-10 flex items-center gap-4 font-mono text-sm uppercase tracking-[0.22em]">
-              <span>Evidence</span>
+              <span>Purchase</span>
               <span className="text-vermilion">→</span>
-              <span>Proof</span>
+              <span>Claim</span>
               <span className="text-vermilion">→</span>
-              <span>Ownership</span>
+              <span>Sell · Void · Settle</span>
             </Reveal>
           </div>
           <Reveal delay={0.2} className="mx-auto w-full max-w-[340px]">
@@ -81,7 +85,7 @@ export default function About() {
         {CHAPTERS.map((c, i) => (
           <Reveal key={c.t}>
             <section className="grid gap-6 border-t border-ink/15 py-14 md:grid-cols-[120px_1fr_1.6fr] md:gap-10">
-              <span className="font-display text-5xl font-extrabold text-transparent [-webkit-text-stroke:1px_var(--stockback-ink)]" aria-hidden="true">
+              <span className="font-display text-5xl font-extrabold text-transparent [-webkit-text-stroke:1px_var(--zen-ink)]" aria-hidden="true">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <h2 className="font-display text-3xl font-bold leading-tight">{c.t}</h2>

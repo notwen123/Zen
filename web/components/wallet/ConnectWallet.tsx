@@ -2,9 +2,9 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
-import { shortAddress } from "@/lib/stockback";
+import { shortAddress } from "@/lib/zen";
 
-/** RainbowKit connect, dressed as STOCKBACK. */
+/** RainbowKit connect, dressed as Zen. */
 export function ConnectWallet({ label = "Connect wallet", className }: { label?: string; className?: string }) {
   return (
     <ConnectButton.Custom>
@@ -26,7 +26,7 @@ export function ConnectWallet({ label = "Connect wallet", className }: { label?:
             </button>
           );
         return (
-          <Link href="/app/dashboard" className={`${cls} border border-ink/70 text-ink hover:text-paper`} aria-label={`Open STOCKBACK app, connected as ${account.displayName}`}>
+          <Link href="/app/dashboard" className={`${cls} border border-ink/70 text-ink hover:text-paper`} aria-label={`Open Zen app, connected as ${account.displayName}`}>
             <span className="h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />
             <span className="font-mono normal-case tracking-normal">{account.ensName ?? shortAddress(account.address)}</span>
           </Link>

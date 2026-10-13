@@ -19,7 +19,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-ink/10 bg-paper/85 backdrop-blur-md">
       <nav className="mx-auto flex h-16 max-w-[1320px] items-center justify-between px-5 sm:px-8" aria-label="Main">
-        <Link href="/" aria-label="STOCKBACK home" className="shrink-0">
+        <Link href="/" aria-label="Zen home" className="shrink-0">
           <Wordmark />
         </Link>
         <ul className="hidden items-center gap-9 text-[0.82rem] font-medium md:flex">
