@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import type { Address } from "viem";
 import { brandById } from "@/lib/brands";
 import { txUrl } from "@/lib/chain";
@@ -10,10 +11,12 @@ import { shortAddress, units } from "@/lib/zen";
 const fmt = (v: bigint) => units(v).toLocaleString("en-US", { maximumFractionDigits: 4 });
 
 /** Event history from the Envio HyperIndex indexer, with a tx hash on every row. */
-export function MarketTape({ account, title = "Market tape", limit = 25 }: { account?: Address; title?: string; limit?: number }) {
+export function MarketTape({ account, title = "Market tape", limit: initial = 25, more = false }: { account?: Address; title?: string; limit?: number; more?: boolean }) {
+  const [limit, setLimit] = useState(initial);
   const q = useQuery({
     queryKey: ["indexed", account ?? "all", limit],
-    queryFn: () => getIndexedEvents({ account, limit }),
+    queryFn: () => getIndexedEvents({ account, limit: limit + 1 }),
+    placeholderData: (prev) => prev,
     refetchInterval: 10_000,
     retry: false,
   });
@@ -33,7 +36,7 @@ export function MarketTape({ account, title = "Market tape", limit = 25 }: { acc
         <p className="mt-4 text-sm text-muted">No indexed events yet.</p>
       ) : (
         <ol className="mt-4 divide-y divide-ink/10">
-          {q.data.map((e) => {
+          {q.data.slice(0, limit).map((e) => {
             const b = e.brand ? brandById(e.brand) : undefined;
             return (
               <li key={e.id} className="grid grid-cols-[1fr_auto] gap-x-4 py-2.5 text-sm">
@@ -57,6 +60,11 @@ export function MarketTape({ account, title = "Market tape", limit = 25 }: { acc
             );
           })}
         </ol>
+      )}
+      {more && q.data && q.data.length > limit && (
+        <button type="button" onClick={() => setLimit((l) => l + 15)} className="mt-3 font-mono text-xs uppercase tracking-[0.16em] text-ink underline decoration-vermilion underline-offset-4">
+          Show more
+        </button>
       )}
     </section>
   );

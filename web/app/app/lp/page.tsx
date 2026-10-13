@@ -1,53 +1,94 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 import { useAccount } from "@/lib/account";
 import { usePools } from "@/components/hooks/useZen";
 import { PoolPanel, RiskDisclosure } from "@/components/lp/PoolPanel";
 import { Eyebrow } from "@/components/ui/Button";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 import { MarketTape } from "@/components/indexer/MarketTape";
+import { BrandMark } from "@/components/brand/BrandMark";
+import { units } from "@/lib/zen";
+
+const num = (v: bigint, d = 2) => units(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
 
 export default function LpTerminal() {
   const { address } = useAccount();
   const pools = usePools(address);
+  const [tab, setTab] = useState(0);
+  const p = pools.data?.[tab];
 
   return (
     <div className="mx-auto max-w-6xl">
-      <header>
-        <Eyebrow>LP terminal · Monad testnet</Eyebrow>
-        <h1 className="mt-3 font-display text-5xl font-bold leading-tight sm:text-6xl">Underwrite refund risk.</h1>
-        <p className="mt-4 max-w-2xl text-charcoal">
-          Stock-back rewards stay locked until a purchase&apos;s return window closes. Each exit pool buys those locked claims from shoppers at a discount,
-          paying them now. If the purchase is kept, the pool collects the full claim; if it is refunded, the pool loses what it paid. As far as we know this is
-          the first onchain market that prices consumer refund risk. Every number below is read live from chain.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <Eyebrow>LP terminal · Monad testnet</Eyebrow>
+          <h1 className="mt-3 font-display text-5xl font-bold leading-tight">Underwrite refund risk.</h1>
+          <p className="mt-3 max-w-xl text-charcoal">
+            Pools buy locked stock-back claims at a discount. Kept purchases pay the pool the full claim; refunded ones cost it what it paid. Every number is read live
+            from chain.
+          </p>
+        </div>
+        {!address && <ConnectWallet />}
       </header>
 
-      {!address && (
-        <div className="mt-8 flex flex-wrap items-center gap-4 border border-ink/15 p-5">
-          <p className="max-w-md text-sm text-charcoal">Browsing is public. To deposit or withdraw as an LP, sign in with your passkey.</p>
-          <ConnectWallet />
-        </div>
-      )}
-
-      <div className="mt-10">
+      <div className="mt-6">
         <RiskDisclosure />
       </div>
 
-      <div className="mt-12 space-y-10">
-        {pools.isLoading ? (
-          <p className="breathe font-display text-2xl">Reading pools from chain…</p>
-        ) : pools.isError ? (
-          <p className="text-vermilion-deep" role="alert">
-            Couldn&apos;t read the exit pools from the Monad RPC. Retrying every 15 seconds.
-          </p>
-        ) : (
-          pools.data?.map((p) => <PoolPanel key={p.pool} p={p} address={address} />)
-        )}
-      </div>
+      {pools.isLoading ? (
+        <p className="breathe mt-10 font-display text-2xl">Reading pools from chain…</p>
+      ) : pools.isError || !pools.data ? (
+        <p className="mt-10 text-vermilion-deep" role="alert">
+          Couldn&apos;t read the exit pools from the Monad RPC. Retrying every 15 seconds.
+        </p>
+      ) : (
+        <>
+          {/* Pool switcher doubles as the summary strip: NAV and P&L for every pool at a glance. */}
+          <div role="tablist" aria-label="Exit pools" className="mt-8 grid gap-3 sm:grid-cols-3">
+            {pools.data.map((x, i) => {
+              const net = x.realizedGains - x.realizedLosses;
+              const on = i === tab;
+              return (
+                <button
+                  key={x.pool}
+                  role="tab"
+                  aria-selected={on}
+                  aria-controls="pool-panel"
+                  onClick={() => setTab(i)}
+                  className={`flex items-center gap-3 border p-4 text-left transition-colors ${on ? "border-ink bg-[#FBF8F1] shadow-[0_20px_40px_-30px_rgba(23,23,23,.6)]" : "border-ink/15 hover:border-ink/40"}`}
+                >
+                  <BrandMark brand={x.brand} className="h-8 w-11 shrink-0" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-lg font-bold">{x.brand.name}</span>
+                    <span className="block font-mono text-xs tabular text-muted">
+                      NAV {num(x.totalAssets)} {x.brand.asset}
+                    </span>
+                  </span>
+                  <span className={`font-mono text-sm tabular ${net < 0n ? "text-vermilion-deep" : "text-ink"}`}>
+                    {net > 0n ? "+" : net < 0n ? "−" : ""}
+                    {num(net < 0n ? -net : net)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-      <div className="mt-12">
-        <MarketTape title="Market tape · cash-outs, refunds, settlements, LP flows" />
+          <div id="pool-panel" role="tabpanel" className="mt-4">
+            <AnimatePresence mode="wait">
+              {p && (
+                <motion.div key={p.pool} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.2 }}>
+                  <PoolPanel p={p} address={address} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </>
+      )}
+
+      <div className="mt-10">
+        <MarketTape title="Market tape · cash-outs, refunds, settlements, LP flows" limit={8} more />
       </div>
     </div>
   );

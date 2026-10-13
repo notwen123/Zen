@@ -35,7 +35,7 @@ export function FundAccount({ compact = false }: { compact?: boolean }) {
   return (
     <div className={compact ? "mt-2 text-xs" : "border border-ink/15 bg-paper-dark/40 p-4 text-sm"}>
       <p className="font-mono">{bal.data === undefined ? "…" : `${Number(formatEther(bal.data)).toFixed(4)} MON`}</p>
-      {low && (
+      {low && !state.hash && (
         <button type="button" disabled={state.busy} onClick={fund} className="mt-2 border border-vermilion px-2 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.12em] text-vermilion-deep hover:bg-vermilion hover:text-paper disabled:opacity-50">
           {state.busy ? "Funding…" : `Fund my account (${FAUCET_DRIP_MON} test MON)`}
         </button>
@@ -47,7 +47,7 @@ export function FundAccount({ compact = false }: { compact?: boolean }) {
             tx ↗
           </a>
         )}
-        {low && !state.msg && (
+        {low && !state.msg && !state.hash && (
           <>
             Testnet only. Or use{" "}
             <a className="ink-link" href={FAUCET_URL} target="_blank" rel="noreferrer">

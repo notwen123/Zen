@@ -2,7 +2,24 @@
 
 import { useAccount } from "@/lib/account";
 import { useClaims } from "@/components/hooks/useZen";
-import { ClaimCard, ClaimsSummary, useNow } from "@/components/claims/LockedEquity";
+import { useState } from "react";
+import { ClaimCard, ClaimsSummary, claimState, useNow, type ClaimState } from "@/components/claims/LockedEquity";
+import type { LockedClaim } from "@/lib/zen";
+
+const FILTERS: { key: "active" | "all" | ClaimState; label: string; match: (s: ClaimState) => boolean }[] = [
+  { key: "active", label: "Needs action", match: (s) => s === "locked" },
+  { key: "cashed", label: "Cashed out", match: (s) => s === "cashed" },
+  { key: "settled", label: "Settled", match: (s) => s === "settled" },
+  { key: "voided", label: "Refunded", match: (s) => s === "voided" },
+  { key: "all", label: "All", match: () => true },
+];
+
+/** Locked claims first, soonest unlock first; then everything else newest first. */
+const order = (a: LockedClaim, b: LockedClaim) => {
+  const la = claimState(a) === "locked", lb = claimState(b) === "locked";
+  if (la !== lb) return la ? -1 : 1;
+  return la ? a.unlockAt - b.unlockAt : Number(b.id - a.id);
+};
 import { Empty, Muted, ScanLink } from "@/components/ownership/Ownership";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 import { addressUrl } from "@/lib/chain";
@@ -12,6 +29,12 @@ export default function Portfolio() {
   const { address } = useAccount();
   const { data, isLoading, isError, refetch } = useClaims(address);
   const now = useNow();
+  const [picked, setFilter] = useState<(typeof FILTERS)[number]["key"]>();
+  const [limit, setLimit] = useState(6);
+  const counts = Object.fromEntries(FILTERS.map((f) => [f.key, (data ?? []).filter((c) => f.match(claimState(c))).length]));
+  const filter = picked ?? (counts.active ? "active" : "all"); // open on what needs action, else everything
+  const active = FILTERS.find((f) => f.key === filter)!;
+  const shown = [...(data ?? [])].filter((c) => active.match(claimState(c))).sort(order);
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -41,14 +64,45 @@ export default function Portfolio() {
           />
         ) : data?.length ? (
           <>
-            <div className="border-b border-ink/15 pb-10">
+            <div className="border-b border-ink/15 pb-8">
               <ClaimsSummary claims={data} now={now} />
             </div>
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {data.map((c) => (
-                <ClaimCard key={c.id.toString()} c={c} now={now} />
+            <div role="tablist" aria-label="Filter claims" className="mt-8 flex flex-wrap gap-2">
+              {FILTERS.map((f) => (
+                <button
+                  key={f.key}
+                  role="tab"
+                  aria-selected={filter === f.key}
+                  onClick={() => (setFilter(f.key), setLimit(6))}
+                  className={`border px-3 py-1.5 font-mono text-xs uppercase tracking-[0.14em] transition-colors ${filter === f.key ? "border-ink bg-ink text-paper" : "border-ink/20 text-charcoal hover:border-ink/50"}`}
+                >
+                  {f.label} <span className="opacity-60">{counts[f.key]}</span>
+                </button>
               ))}
             </div>
+            {shown.length ? (
+              <>
+                <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {shown.slice(0, limit).map((c) => (
+                    <ClaimCard key={c.id.toString()} c={c} now={now} />
+                  ))}
+                </div>
+                {shown.length > limit && (
+                  <button type="button" onClick={() => setLimit((l) => l + 6)} className="mt-6 font-mono text-xs uppercase tracking-[0.16em] text-ink underline decoration-vermilion underline-offset-4">
+                    Show more ({shown.length - limit})
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className="mt-6 text-sm text-muted">
+                {filter === "active" ? "Nothing needs action: no locked claims right now." : "No claims in this view."}{" "}
+                {filter === "active" && (
+                  <button type="button" className="ink-link" onClick={() => setFilter("all")}>
+                    See all claims
+                  </button>
+                )}
+              </p>
+            )}
           </>
         ) : (
           <Empty title="No locked equity yet." body="Verify a purchase to mint a locked claim on that brand's tokenized equity." cta={<ScanLink />} />

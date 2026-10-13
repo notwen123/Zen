@@ -76,11 +76,18 @@ export function expectedReturnModel(pRefundBps: number, timeValueBps: number, lp
 
 export function RiskDisclosure() {
   return (
-    <section aria-labelledby="risk-title" className="border-2 border-vermilion bg-[#FBF8F1] p-6 sm:p-8">
-      <h2 id="risk-title" className="font-mono text-xs font-bold uppercase tracking-[0.28em] text-vermilion-deep">
-        Risk disclosure · read before depositing
-      </h2>
-      <ul className="mt-5 grid gap-x-10 gap-y-3 text-sm leading-relaxed text-charcoal md:grid-cols-2">
+    <details aria-labelledby="risk-title" className="group border-l-4 border-vermilion bg-[#FBF8F1] px-5 py-4">
+      <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-3">
+        <span id="risk-title" className="text-sm text-charcoal">
+          <b className="font-mono text-xs uppercase tracking-[0.2em] text-vermilion-deep">Risk · </b>
+          Testnet mock assets. LPs lose the full price paid on every refunded claim, and capital in held claims can&apos;t be withdrawn until they resolve.
+        </span>
+        <span className="font-mono text-xs uppercase tracking-[0.16em] text-vermilion-deep">
+          <span className="group-open:hidden">Read all 7 risks ↓</span>
+          <span className="hidden group-open:inline">Hide ↑</span>
+        </span>
+      </summary>
+      <ul className="mt-4 grid gap-x-10 gap-y-3 text-sm leading-relaxed text-charcoal md:grid-cols-2">
         <li>
           <b className="text-ink">Testnet, mock assets.</b> mNKE, mAAPL and mSBUX are demo tokens on Monad testnet. They are not securities, have no value and
           are not affiliated with the brands named.
@@ -110,7 +117,7 @@ export function RiskDisclosure() {
           <b className="text-ink">Not audited. No yield is promised.</b> Every return figure on this page is a model output under stated assumptions.
         </li>
       </ul>
-    </section>
+    </details>
   );
 }
 
@@ -119,6 +126,7 @@ export function PoolPanel({ p, address }: { p: PoolState; address?: Address }) {
   const idlePct = p.totalAssets > 0n ? Number((p.idle * 10_000n) / p.totalAssets) / 100 : 0;
   const utilization = p.totalAssets > 0n ? Number((p.booked * 10_000n) / p.totalAssets) / 10_000 : 0;
   const a = p.brand.asset;
+  const apr = expectedReturnModel(p.category.pRefundBps, p.timeValueBps, p.lpFeeBps, PRODUCTION_WINDOW[p.category.category]);
 
   return (
     <article aria-labelledby={`pool-${p.brand.id}`} className="bg-[#FBF8F1] p-6 shadow-[0_30px_50px_-40px_rgba(23,23,23,.5)] sm:p-8">
@@ -143,29 +151,25 @@ export function PoolPanel({ p, address }: { p: PoolState; address?: Address }) {
         </span>
       </header>
 
-      <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+      <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
         <div className="col-span-2">
           <dt className="text-xs text-muted">NAV (total assets)</dt>
           <dd className="mt-1 font-display text-4xl font-bold tabular">
             {fmt(p.totalAssets, 2)} <span className="font-mono text-sm font-normal text-muted">{a}</span>
           </dd>
         </div>
-        <Stat k={`NAV per LP share (${a})`} v={p.navPerShare.toLocaleString("en-IN", { minimumFractionDigits: 6, maximumFractionDigits: 6 })} />
         <Stat k="Net realized P&L" v={`${net > 0n ? "+" : ""}${fmt(net)}`} tone={net < 0n ? "loss" : "gain"} />
-        <Stat k="Claims bought" v={p.claimsBought.toString()} />
-        <Stat k="Currently held" v={p.heldCount.toString()} />
-        <Stat k="Realized gains" v={`+${fmt(p.realizedGains)}`} />
-        <Stat k="Realized losses" v={p.realizedLosses > 0n ? `−${fmt(p.realizedLosses)}` : fmt(0n)} tone={p.realizedLosses > 0n ? "loss" : undefined} />
+        <Stat k="Model APR (production window)" v={pct(apr.apr)} />
       </dl>
 
-      <div className="mt-8">
+      <div className="mt-6">
         <div className="flex justify-between font-mono text-xs tabular">
           <span>
             <span className="mr-2 inline-block h-2 w-2 bg-ink align-middle" aria-hidden="true" />
-            Idle {fmt(p.idle)} {a}
+            Idle {fmt(p.idle)}
           </span>
           <span>
-            Locked in claims (book cost) {fmt(p.booked)} {a}
+            In claims {fmt(p.booked)}
             <span className="ml-2 inline-block h-2 w-2 bg-vermilion align-middle" aria-hidden="true" />
           </span>
         </div>
@@ -176,29 +180,45 @@ export function PoolPanel({ p, address }: { p: PoolState; address?: Address }) {
         >
           {p.totalAssets > 0n && (
             <>
-              <span className="bg-ink" style={{ width: `${idlePct}%` }} />
+              <span className="bg-ink transition-[width] duration-700 ease-out" style={{ width: `${idlePct}%` }} />
               <span className="flex-1 bg-vermilion" />
             </>
           )}
         </div>
-        <p className="mt-2 text-xs text-muted">
-          Utilization {pct(utilization, 1)}. Withdrawals can use only the idle part; LP shares outstanding:{" "}
-          <span className="font-mono tabular">{(Number(p.totalSupply) / 1e24).toLocaleString("en-IN", { maximumFractionDigits: 4 })}</span>.
-        </p>
       </div>
 
-      <div className="mt-8 grid gap-8 lg:grid-cols-2">
-        <Params p={p} />
-        <Model p={p} utilization={utilization} />
-      </div>
-
-      {address && (
-        <div className="mt-8">
-          <LpActions p={p} address={address} />
+      <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_1fr]">
+        <div>
+          {address ? (
+            <LpActions p={p} address={address} />
+          ) : (
+            <p className="border border-dashed border-ink/25 p-5 text-sm text-muted">Sign in with your passkey above to deposit into or withdraw from this pool.</p>
+          )}
         </div>
-      )}
+        <dl className="grid grid-cols-2 content-start gap-x-6 gap-y-4 text-sm">
+          <Stat k={`Share price (${a})`} v={p.navPerShare.toLocaleString("en-IN", { minimumFractionDigits: 6, maximumFractionDigits: 6 })} />
+          <Stat k="Utilization" v={pct(utilization, 1)} />
+          <Stat k="Claims bought" v={p.claimsBought.toString()} />
+          <Stat k="Currently held" v={p.heldCount.toString()} />
+          <Stat k="Realized gains" v={`+${fmt(p.realizedGains)}`} />
+          <Stat k="Realized losses" v={p.realizedLosses > 0n ? `−${fmt(p.realizedLosses)}` : fmt(0n)} tone={p.realizedLosses > 0n ? "loss" : undefined} />
+          <Stat k={`Refund probability · ${CATEGORY_LABEL[p.category.category]}`} v={bps(p.category.pRefundBps)} />
+          <Stat k="Break-even refund rate" v={pct(apr.breakEven)} />
+        </dl>
+      </div>
 
-      <div className="mt-8 border-t border-ink/15 pt-6">
+      <details className="group mt-8 border-t border-ink/15 pt-5">
+        <summary className="flex cursor-pointer list-none items-center justify-between font-mono text-[0.7rem] uppercase tracking-[0.24em] text-muted hover:text-ink">
+          How this pool prices claims · APR model and assumptions
+          <span className="group-open:rotate-180 transition-transform" aria-hidden="true">↓</span>
+        </summary>
+        <div className="mt-5 grid gap-8 lg:grid-cols-2">
+          <Params p={p} />
+          <Model p={p} utilization={utilization} />
+        </div>
+      </details>
+
+      <div className="mt-6 border-t border-ink/15 pt-5">
         <ClaimsTable p={p} />
       </div>
     </article>
@@ -275,7 +295,9 @@ const Row = ({ k, v, note, strong }: { k: string; v: string; note?: string; stro
 function ClaimsTable({ p }: { p: PoolState }) {
   const claims = usePoolClaims(p.pool);
   const now = useNow();
-  const rows = claims.data ?? [];
+  const all = claims.data ?? [];
+  const [limit, setLimit] = useState(5);
+  const rows = all.slice(0, limit);
   const a = p.brand.asset;
   return (
     <section aria-label={`Claims held by the ${a} pool`}>
@@ -284,7 +306,7 @@ function ClaimsTable({ p }: { p: PoolState }) {
         <p className="breathe mt-4 text-sm text-muted">Reading claims from chain…</p>
       ) : claims.isError ? (
         <p className="mt-4 text-sm text-vermilion-deep">Couldn&apos;t read claims from the RPC. Retrying automatically.</p>
-      ) : !rows.length ? (
+      ) : !all.length ? (
         <p className="mt-4 text-sm text-muted">This pool has not bought any claims yet.</p>
       ) : (
         <div className="mt-4 overflow-x-auto">
@@ -305,6 +327,11 @@ function ClaimsTable({ p }: { p: PoolState }) {
               ))}
             </tbody>
           </table>
+          {all.length > rows.length && (
+            <button type="button" onClick={() => setLimit((l) => l + 10)} className="mt-3 font-mono text-xs uppercase tracking-[0.16em] text-ink underline decoration-vermilion underline-offset-4">
+              Show more ({all.length - rows.length} older)
+            </button>
+          )}
           <p className="mt-2 text-xs text-muted">
             Book cost is stored onchain only while a claim is held. For resolved claims the pool&apos;s realized gains and losses above are the authoritative totals.
           </p>
