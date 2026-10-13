@@ -18,6 +18,7 @@ Every claim below links to code, a test or an on-chain transaction. Nothing here
 | Existing receipt pipeline rewired: `submitClaim` now mints a conditional claim in the same transaction (nullifier, eligibility, caps, budget unchanged) | `src/ReceiptCommitmentRegistry.sol`, `src/RewardPool.sol` |
 | **96 tests + 6 invariants, all passing** under Foundry 1.8.5 with `network = "monad"`: full lifecycle (sell → settle gain, sell → void loss), guards (min hold, slippage, void after unlock, replayed refund, non-attester), ERC-4626 share math with gains and losses, pricing fuzz (`price ≤ amount`, monotonic), invariant `escrowed == Σ Locked amounts` | `test/ConditionalLifecycle.t.sol`, `test/Invariant.t.sol` |
 | Monad-specific engineering: tight explicit gas limits everywhere (Monad bills the gas limit), deploy script refuses chains other than 31337 / 10143 / 143, mocks refuse mainnet, the app reads by claim-id enumeration because the public RPC caps `eth_getLogs` at 100 blocks | `script/DeployZen.s.sol`, `web/lib/chain.ts`, `web/lib/zen.ts` |
+| **Envio HyperIndex** indexer (`indexer/`) on Monad testnet via HyperSync: claims, cash-outs, refunds, settles, LP flows and per-wallet refund history with tx hashes; full backfill in ~7 s; indexed realized gains/losses equal the on-chain pool values | `indexer/`, `web/components/indexer/MarketTape.tsx` |
 | Resolution callback can't be griefed: gas-capped `try/catch` plus a permissionless `reconcile` | `src/ConditionalClaim.sol`, `src/InstantExitPool.sol` |
 
 ## Design (20%)

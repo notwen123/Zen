@@ -34,6 +34,7 @@ That last step is the market: LPs earn the spread on claims that settle and lose
 | Contracts | [Addresses below](#contracts-and-addresses), all deployed by `script/DeployZen.s.sol` |
 | Seeded activity | [Traction](#traction-real-testnet-transactions): 20 purchases, 8 instant exits, 2 refunds, the rest settled, from 4 wallets |
 | Web app | `cd web && npm ci && npm run dev`, then open http://localhost:3000 ([quickstart](#quickstart)) |
+| Indexer | **Envio HyperIndex** over HyperSync (`indexer/`): every claim, cash-out, refund, settle and LP flow with its tx hash; powers the LP terminal's market tape and Activity history. Backfills the whole deployment in seconds; indexed pool P&L matches the contracts exactly |
 | Accounts | Passkeys via Mera: one passkey → a Monad EOA (signing) + a separate HKDF key for the encrypted **Receipt Locker** ([SECURITY.md](SECURITY.md#passkey-accounts-and-key-separation-mera)) |
 
 **Try it as a judge (about 5 minutes):**
@@ -196,7 +197,7 @@ Wallets: shoppers [`0x9Fbb76B05790e3411280424c99155CeE703A8123`](https://testnet
 - **Simulated merchant.** The `/merchant` POS signs receipts with a demo key. DKIM-verified refund emails are a design, not built.
 - **Refund probabilities are illustrative**, not measured.
 - **Resolution callback is best effort.** ConditionalClaim notifies the pool with a gas-capped `try/catch`, so a broken holder can never block settlement; if a callback ever failed, anyone can call `InstantExitPool.reconcile(id)`.
-- **eth_getLogs limits.** Monad's public RPC caps log queries at 100 blocks, so the app reads state by enumerating claim ids rather than scanning events.
+- **eth_getLogs limits.** Monad's public RPC caps log queries at 100 blocks. History comes from the Envio indexer (HyperSync has no such limit); if the indexer is unreachable, the app falls back to enumerating claim ids from contract state.
 - **Not audited.** 96 Foundry tests and 6 invariants pass (below); that is not an audit.
 
 See [SECURITY.md](SECURITY.md) for the full threat model.
@@ -257,6 +258,9 @@ forge script script/DeployZen.s.sol --rpc-url monad_testnet --broadcast --slow -
 # seed real activity (3 shoppers + 1 LP, ~20 claims, sells, refunds, settles)
 node --env-file=.env.local --env-file=web/.env.local script/seed-activity.mjs
 
+# indexer (Envio HyperIndex; needs Docker and a free ENVIO_API_TOKEN in indexer/.env)
+cd indexer && npm install && npx envio dev     # GraphQL at http://localhost:8080/v1/graphql
+
 # web app
 cd web && npm ci && npm run sync-contracts && npm run dev
 ```
@@ -270,7 +274,8 @@ src/        ConditionalClaim, VoidOracle, InstantExitPool, registry, policies, r
 test/       lifecycle, pricing fuzz, LP accounting, security, invariants
 script/     DeployZen.s.sol (deploy), seed-activity.mjs (testnet activity)
 deployments/10143.json, 10143-activity.json
-web/        Next.js app: shopper, merchant, LP terminal
+indexer/    Envio HyperIndex: config.yaml, schema.graphql, handlers (Monad testnet via HyperSync)
+web/        Next.js app: shopper, merchant, LP terminal, Receipt Locker
 ```
 
 ## License and attribution
