@@ -26,6 +26,21 @@ The **purchase attester** vouches that a purchase happened; the **ECDSA verifier
 | LP accounting | `totalAssets = idle + book cost`; gains at settle, losses at void; withdrawals ≤ idle; `_decimalsOffset = 6` | `test_lpShares_reflectGainsAndLosses`, `test_withdrawals_limitedToIdle`, `Invariant.invariant_exitPoolBooksHeldClaims` |
 | Liquidity | sale reverts if the price exceeds idle assets | `test_insufficientLiquidity` |
 
+## Passkey accounts and key separation (Mera)
+
+The web app has no wallet extension, seed phrase or custody backend. Sign-in creates or reuses a passkey; Mera (`@category-labs/mera`) returns the passkey's 32-byte **WebAuthn PRF output**, which is never stored. Two independent keys are derived from it in the browser (`web/lib/account.tsx`):
+
+| Key | Derivation | Used for | Never used for |
+|---|---|---|---|
+| Signing key | BIP-39 entropy → seed → BIP-44 `m/44'/60'/0'/0/0` (Mera's documented path) → secp256k1 signing session → viem account | every transaction: claim, cash out, settle, LP deposit/withdraw, refund submit | encryption |
+| Receipt Locker key | HKDF-SHA256(PRF output, salt `zen/passkey-prf/v1`, info **`zen-receipt-locker-v1`**) → AES-256-GCM, **non-extractable** CryptoKey | encrypting raw receipt payloads and claim proofs in IndexedDB | signing |
+
+- **Domain separation.** The two derivations use different constructions and the locker key carries its own HKDF info string, so neither key reveals or equals the other; a bug or leak in one use can't be turned into the other. The PRF output buffer and the raw signing key are zeroed after derivation; the signing session is ended on sign-out and after 30 minutes idle (`session.end()` zeroes it).
+- **Locker format.** Each entry is AES-GCM with a fresh 96-bit IV and the entry id and kind bound as additional authenticated data, so ciphertexts can't be swapped between entries. Storage holds ciphertext only (verified in the browser test). Backups export ciphertext; importing on a new device decrypts only after signing in with the **same** passkey.
+- **Trade-off (held session).** The signing key lives in page memory while signed in, as in Mera's "hold the session" mode, because the product has several transactions per flow. Any script running on the page could sign while the session is live: keep the CSP strict and dependencies minimal. Per-transaction prompting is the stricter alternative.
+- **PRF availability.** Providers without PRF get `PRF_UNAVAILABLE` and a message naming Google Password Manager (on desktop Chrome only passkeys saved to GPM return PRF), iCloud Keychain and 1Password.
+- **Testnet faucet.** `/api/faucet` sends 0.12 MON from a server-held key (`FAUCET_PRIVATE_KEY`, never sent to the browser; covered by the secrets scan), refuses any chain but 10143, rate-limits per IP and per address, and skips funded accounts.
+
 ## Purchase path (unchanged trust model)
 
 | Risk | Mitigation | Test(s) |

@@ -1,11 +1,13 @@
 "use client";
 
+import { hexToString } from "viem";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { decodeEventLog, type Hex } from "viem";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, usePasskeyAccount, useWriteContract } from "@/lib/account";
+import { trySeal } from "@/lib/locker";
 import { Stamp } from "@/components/art/Art";
 import { fmtTime, fmtUnits } from "@/components/claims/LockedEquity";
 import { useVerifier } from "@/components/hooks/useZen";
@@ -68,6 +70,7 @@ export function ScanFlow() {
   const { address } = useAccount();
   const { data: verifier } = useVerifier();
   const { writeContractAsync } = useWriteContract();
+  const { lockerKey } = usePasskeyAccount();
   const qc = useQueryClient();
   const [stage, setStage] = useState<Stage>({ s: "choose" });
   const [form, setForm] = useState<ReceiptInput>({ brand: "NIKE", merchant: "", receiptRef: "", amount: "", currency: "INR", date: today() });
@@ -160,6 +163,8 @@ export function ScanFlow() {
     try {
       setStage({ s: "working", label: "Verifying merchant signature…" });
       const claim = await prepareMerchantClaim(address, payload);
+      // Receipt Locker: keep the raw signed receipt, encrypted with the passkey-derived locker key.
+      void trySeal(lockerKey, "receipt", { title: `Merchant receipt · ${claim.receipt?.brand ?? ""} ${claim.receipt?.receiptId ?? ""}`.trim(), data: { signedReceipt: payload, receipt: claim.receipt } });
       setStage({ s: "working", label: "Checking eligibility…" });
       const { status, reward } = await getClaimStatus(claim);
       setStage({ s: "preview", claim, status, reward });
@@ -200,6 +205,11 @@ export function ScanFlow() {
         qc.invalidateQueries({ queryKey: ["activity"], refetchType: "all" }),
         qc.invalidateQueries({ queryKey: ["pools"], refetchType: "all" }),
       ]).catch(() => {});
+      // Receipt Locker: the full claim proof (attested claim + signature + tx), for disputes or re-proving later.
+      void trySeal(lockerKey, "claim-proof", {
+        title: `Claim #${minted.claimId ?? "?"} · ${claim.receipt?.brand ?? hexToString(claim.claim.brandId).replace(/\0+$/, "")}`,
+        data: { claimId: minted.claimId, tx: hash, claim: claim.claim, attestation: claim.attestation, evidence: claim.evidence, receipt: claim.receipt },
+      });
       setStage({ s: "done", claim, ...minted, hash });
     } catch (e) {
       setStage({ s: "error", error: classifyClaimError(e), claim, reward });

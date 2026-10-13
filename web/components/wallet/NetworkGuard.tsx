@@ -1,11 +1,12 @@
 "use client";
 
-import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useConnectModal } from "@/lib/account";
 import { useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { useAccount, useSwitchChain } from "wagmi";
+import { useAccount, useSwitchChain } from "@/lib/account";
 import { Seal } from "@/components/art/Art";
 import { Button } from "@/components/ui/Button";
+import { ConnectWallet } from "@/components/wallet/ConnectWallet";
 import { FAUCET_URL, monadTestnet } from "@/lib/chain";
 
 /** Pages that only read public chain state render without a wallet (judges can browse them). */
@@ -15,19 +16,18 @@ const PUBLIC = ["/app/lp", "/app/brands"];
 export function NetworkGuard({ children }: { children: ReactNode }) {
   const path = usePathname();
   const { status, chainId } = useAccount();
-  const { openConnectModal } = useConnectModal();
   const { switchChainAsync, isPending } = useSwitchChain();
   const [switchError, setSwitchError] = useState(false);
 
-  if (status === "connecting" || status === "reconnecting")
-    return <Panel title="Opening your ledger…" body="Reconnecting to your wallet." quiet />;
+  if (status === "connecting")
+    return <Panel title="Waiting for your passkey…" body="Approve the passkey prompt to derive your Monad account." quiet />;
 
   if (status !== "connected" && PUBLIC.some((p) => path === p || path.startsWith(p + "/"))) return <>{children}</>;
 
   if (status !== "connected")
     return (
-      <Panel title="Connect to continue." body="Zen reads your claims directly from Monad testnet. Connect a wallet to see them.">
-        <Button onClick={() => openConnectModal?.()}>Connect wallet</Button>
+      <Panel title="Sign in to continue." body="Sign in with a passkey (Face ID, Touch ID, Windows Hello, a phone or a security key). Zen derives your Monad account from it: no seed phrase, no extension, no custody.">
+        <ConnectWallet />
       </Panel>
     );
 

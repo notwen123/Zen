@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount } from "wagmi";
+import { useAccount } from "@/lib/account";
 import { useActivity } from "@/components/hooks/useZen";
 import { ActivityTimeline, Empty, Muted, ScanLink } from "@/components/ownership/Ownership";
 import { ConnectWallet } from "@/components/wallet/ConnectWallet";

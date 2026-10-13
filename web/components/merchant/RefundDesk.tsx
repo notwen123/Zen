@@ -1,10 +1,10 @@
 "use client";
 
-import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useConnectModal } from "@/lib/account";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { Hex } from "viem";
-import { useAccount, useSwitchChain, useWriteContract } from "wagmi";
+import { useAccount, useSwitchChain, useWriteContract } from "@/lib/account";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { useAllClaims } from "@/components/hooks/useZen";
 import { Button, Eyebrow } from "@/components/ui/Button";

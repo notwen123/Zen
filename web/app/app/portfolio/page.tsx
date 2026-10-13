@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount } from "wagmi";
+import { useAccount } from "@/lib/account";
 import { useClaims } from "@/components/hooks/useZen";
 import { ClaimCard, ClaimsSummary, useNow } from "@/components/claims/LockedEquity";
 import { Empty, Muted, ScanLink } from "@/components/ownership/Ownership";

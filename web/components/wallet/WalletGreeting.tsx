@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { useAccountEffect } from "wagmi";
+import { useAccountEffect } from "@/lib/account";
 import { Seal } from "@/components/art/Art";
 
 const greeting = () => {
@@ -18,8 +18,8 @@ export function WalletGreeting() {
   const [show, setShow] = useState(false);
 
   useAccountEffect({
-    onConnect({ isReconnected }) {
-      if (isReconnected || pathname.startsWith("/app")) return;
+    onConnect() {
+      if (pathname.startsWith("/app")) return;
       setShow(true);
       router.prefetch("/app/dashboard");
       setTimeout(() => router.push("/app/dashboard"), 2600);

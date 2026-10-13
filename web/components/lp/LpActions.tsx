@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { BaseError, formatUnits, parseUnits, type Address, type Hex } from "viem";
-import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useWaitForTransactionReceipt, useWriteContract } from "@/lib/account";
 import { Button } from "@/components/ui/Button";
 import {
   approveEquityRequest,

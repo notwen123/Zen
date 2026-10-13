@@ -27,6 +27,7 @@ Every claim below links to code, a test or an on-chain transaction. Nothing here
 | Shopper: **My locked equity** with live countdown to unlock, labelled *demo window*, and **Cash out now** showing the live quote, the discount % and a plain-language sentence of what you give up | `web/app/app/portfolio` |
 | **LP terminal**: pool NAV, idle vs capital in claims, held claims with countdowns, per-category refund probability, expected APR with its formula and assumptions, realized gains and losses, deposit and withdraw, and a visible **risk disclosure**; every number is read from chain | `web/app/app/lp` |
 | Merchant demo: issue signed receipts, and **Issue refund** to trigger a void (shows the LP-loss path) | `web/app/(site)/merchant` |
+| **Passkey accounts (Mera)**: no extension or seed phrase; one passkey derives the Monad signing account and, separately (HKDF `zen-receipt-locker-v1`), the AES-GCM key of the encrypted **Receipt Locker**; testnet faucet for new accounts | `web/lib/account.tsx`, `web/app/app/locker` |
 | Honest labels throughout: demo windows, mock assets, simulated merchant, demo admin | UI + README |
 
 ## Originality (15%)

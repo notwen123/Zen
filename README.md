@@ -34,9 +34,10 @@ That last step is the market: LPs earn the spread on claims that settle and lose
 | Contracts | [Addresses below](#contracts-and-addresses), all deployed by `script/DeployZen.s.sol` |
 | Seeded activity | [Traction](#traction-real-testnet-transactions): 20 purchases, 8 instant exits, 2 refunds, the rest settled, from 4 wallets |
 | Web app | `cd web && npm ci && npm run dev`, then open http://localhost:3000 ([quickstart](#quickstart)) |
+| Accounts | Passkeys via Mera: one passkey → a Monad EOA (signing) + a separate HKDF key for the encrypted **Receipt Locker** ([SECURITY.md](SECURITY.md#passkey-accounts-and-key-separation-mera)) |
 
 **Try it as a judge (about 5 minutes):**
-1. Add Monad testnet to your wallet and get MON from [faucet.monad.xyz](https://faucet.monad.xyz).
+1. **Sign in with a passkey** (no wallet, no seed phrase): Zen derives your Monad account from the passkey with [Mera](https://docs.monad.xyz/guides/mera). Use a PRF-capable provider: Google Password Manager (desktop Chrome: save to GPM), iCloud Keychain or 1Password. Press **Fund my account** for 0.12 test MON (testnet only).
 2. Open **/merchant** (simulated POS) and issue a merchant-signed receipt; scan its QR in **/app/scan** and claim. Your reward appears in **/app/portfolio** as a **Locked** claim with a countdown (a labelled 5–10 minute *demo window*; production windows are 14–30 days).
 3. After the 60 s minimum hold, press **Cash out now**: the quote, the discount and what you give up are shown before you sign.
 4. Or go back to **/merchant → Issue refund** on a claim the LP pool holds, and watch the pool's realized losses move in **/app/lp**.
@@ -260,7 +261,7 @@ node --env-file=.env.local --env-file=web/.env.local script/seed-activity.mjs
 cd web && npm ci && npm run sync-contracts && npm run dev
 ```
 
-`web/.env.local` needs `ATTESTER_ECDSA_KEY`, `ATTESTER_SALT`, `MERCHANT_ED25519_SEED`, `MERCHANT_ED25519_PUBLIC_KEY` (see `web/.env.example`). Never commit them.
+`web/.env.local` needs `ATTESTER_ECDSA_KEY`, `ATTESTER_SALT`, `MERCHANT_ED25519_SEED`, `MERCHANT_ED25519_PUBLIC_KEY` and, for the testnet faucet, `FAUCET_PRIVATE_KEY` (see `web/.env.example`). Never commit them.
 
 ## Repository
 

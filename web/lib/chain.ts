@@ -19,11 +19,15 @@ export const addressUrl = (a: string) => `${monadTestnet.blockExplorers.default.
 
 /** Monad charges the gas LIMIT, not gas used: every write sets an explicit, tight limit. */
 export const GAS = {
-  submitClaim: 900_000n,
+  // measured on Monad testnet (deployments/10143-activity.json) + ~10-20% headroom
+  submitClaim: 620_000n,
   approve: 80_000n,
-  sellClaim: 450_000n,
-  settle: 250_000n,
-  void: 350_000n,
-  deposit: 250_000n,
-  withdraw: 250_000n,
+  sellClaim: 300_000n,
+  settle: 170_000n,
+  void: 320_000n,
+  deposit: 200_000n,
+  withdraw: 200_000n,
 } as const;
+
+/** Testnet faucet drip for new passkey accounts (server-side wallet, /api/faucet). */
+export const FAUCET_DRIP_MON = "0.12";

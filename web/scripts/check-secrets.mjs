@@ -10,7 +10,7 @@ const web = resolve(import.meta.dirname, "..");
 const root = resolve(web, "..");
 // ATTESTER_ECDSA_KEY signs claim and refund attestations; MERCHANT_ED25519_SEED is optional (simulated POS).
 const REQUIRED = ["ATTESTER_ECDSA_KEY", "ATTESTER_SALT"];
-const NAMES = [...REQUIRED, "MERCHANT_ED25519_SEED"];
+const NAMES = [...REQUIRED, "MERCHANT_ED25519_SEED", "FAUCET_PRIVATE_KEY"];
 const secrets = NAMES.map((k) => [k, process.env[k]?.trim().replace(/^0x/, "").toLowerCase()]).filter(([, v]) => v && v.length >= 16);
 if (REQUIRED.some((k) => !secrets.some(([n]) => n === k))) {
   console.error("Missing ATTESTER_ECDSA_KEY or ATTESTER_SALT in env; run with --env-file=.env.local");

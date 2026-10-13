@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/lib/account";
 import { useActivity, useClaims } from "@/components/hooks/useZen";
 import { ClaimsSummary, useNow } from "@/components/claims/LockedEquity";
 import { ActivityTimeline, Empty, Muted, ScanLink } from "@/components/ownership/Ownership";

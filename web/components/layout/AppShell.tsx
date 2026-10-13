@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { useAccount } from "wagmi";
+import { useAccount } from "@/lib/account";
+import { FundAccount } from "@/components/wallet/FundAccount";
 import { TestnetSeal, Wordmark } from "@/components/art/Art";
 import { NetworkGuard } from "@/components/wallet/NetworkGuard";
 import { shortAddress } from "@/lib/zen";
@@ -12,6 +13,7 @@ const NAV = [
   { href: "/app/dashboard", label: "Dashboard", icon: "M3 11 12 3l9 8v10h-6v-6H9v6H3z" },
   { href: "/app/scan", label: "Scan receipt", icon: "M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M7 12h10" },
   { href: "/app/portfolio", label: "Locked equity", icon: "M6 11V8a6 6 0 0 1 12 0v3M5 11h14v10H5z" },
+  { href: "/app/locker", label: "Receipt Locker", icon: "M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4M12 15v2" },
   { href: "/app/lp", label: "LP terminal", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
   { href: "/app/activity", label: "Activity", icon: "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z" },
   { href: "/app/brands", label: "Brands", icon: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" },
@@ -59,8 +61,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           </ul>
         </nav>
         <div className="space-y-3 border-t border-ink/10 pt-5 text-xs">
-          <p className="font-mono uppercase tracking-[0.2em] text-muted">Wallet</p>
-          <p className="font-mono text-sm">{address ? shortAddress(address) : "Not connected"}</p>
+          <p className="font-mono uppercase tracking-[0.2em] text-muted">Passkey account</p>
+          <p className="font-mono text-sm">{address ? shortAddress(address) : "Not signed in"}</p>
+          <FundAccount compact />
           <p className="flex items-center gap-2 text-muted">
             <span className="h-1.5 w-1.5 rounded-full bg-vermilion" aria-hidden="true" />
             Monad Testnet

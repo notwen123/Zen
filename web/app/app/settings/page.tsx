@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
+import { useAccount, useDisconnect, useSwitchChain } from "@/lib/account";
 import { useRouter } from "next/navigation";
 import { useMotionPref } from "@/app/providers";
 import { useVerifier } from "@/components/hooks/useZen";

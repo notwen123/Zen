@@ -3,7 +3,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import type { Address, Hex } from "viem";
-import { useWriteContract } from "wagmi";
+import { useWriteContract } from "@/lib/account";
 import { BrandMark } from "@/components/brand/BrandMark";
 import { Button } from "@/components/ui/Button";
 import type { Brand } from "@/lib/brands";

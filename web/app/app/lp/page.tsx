@@ -1,6 +1,6 @@
 "use client";
 
-import { useAccount } from "wagmi";
+import { useAccount } from "@/lib/account";
 import { usePools } from "@/components/hooks/useZen";
 import { PoolPanel, RiskDisclosure } from "@/components/lp/PoolPanel";
 import { Eyebrow } from "@/components/ui/Button";
