@@ -11,6 +11,14 @@ import { rateLimiter } from "@/lib/rate-limit";
 
 const SEED = process.env.MERCHANT_ED25519_SEED;
 const limited = rateLimiter(30, 10 * 60_000);
+// Behind the Cloudflare Pages front door the request arrives at the Worker host; build links for the host the user
+// actually opened, but only for our own domains (an arbitrary header must never steer a QR elsewhere).
+const FRONT_DOORS = /^([a-z0-9-]+\.)?zen-monad\.pages\.dev$/;
+function publicOrigin(req: Request) {
+  const fwd = req.headers.get("x-zen-public-host");
+  return fwd && FRONT_DOORS.test(fwd) ? `https://${fwd}` : new URL(req.url).origin;
+}
+
 const bad = (error: string, status = 400) => Response.json({ error }, { status });
 
 export async function POST(req: Request) {
@@ -42,7 +50,7 @@ export async function POST(req: Request) {
       currency: "INR",
     });
     // Fragment, not query: the payload never reaches server logs when the link is opened.
-    const link = `${new URL(req.url).origin}/app/scan#r=${payload}`;
+    const link = `${publicOrigin(req)}/app/scan#r=${payload}`;
     const qr = await QRCode.toString(link, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#171717", light: "#00000000" } });
     return Response.json({ receipt, payload, link, qr, simulated: true });
   } catch (e) {
