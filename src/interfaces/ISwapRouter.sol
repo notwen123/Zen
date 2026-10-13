@@ -3,9 +3,8 @@ pragma solidity 0.8.24;
 
 /// @notice Uniswap SwapRouter02 `exactInputSingle` (no `deadline` field).
 /// @dev Adapted from Wield's ISwapRouter, which used the original V3 SwapRouter struct
-///      (with `deadline`, selector 0x414bf389). The router Wield configured on Robinhood
-///      Chain mainnet (0xCaf681a66D020601342297493863E78C959E5cb2) only exposes the
-///      SwapRouter02 selector 0x04e45aaf (verified against deployed bytecode, 2026-09-28).
+///      (with `deadline`, selector 0x414bf389). SwapRouter02 deployments only expose
+///      selector 0x04e45aaf, so every swap through the old layout would revert.
 interface ISwapRouter {
     struct ExactInputSingleParams {
         address tokenIn;

@@ -1,7 +1,9 @@
 # Deployments
 
-`script/DeployStockback.s.sol` writes `<chainId>.json` here with every deployed address.
+`script/DeployZen.s.sol` writes `<chainId>.json` here with every deployed address.
 Local anvil output (`31337.json`) is git-ignored.
 
-- `46630.json`: **Robinhood Chain testnet** demo deployment (mock assets), 2026-09-28. The registry verifier is the Stylus `ReceiptProver`.
-- No mainnet deployment exists.
+- `10143.json`: **Monad testnet** demo deployment (mock tokenized-equity assets, mock AUSD, short labelled
+  demo return windows).
+- `10143-activity.json`: transaction hashes of the seeded testnet activity (`script/seed-activity.mjs`).
+- No mainnet deployment exists. On Monad mainnet (143) every mock contract refuses to deploy by design.

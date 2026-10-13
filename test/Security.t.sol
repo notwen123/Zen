@@ -8,7 +8,7 @@ import {RewardPolicy} from "../src/RewardPolicy.sol";
 import {RewardPool} from "../src/RewardPool.sol";
 import {IReceiptVerifier} from "../src/interfaces/IReceiptVerifier.sol";
 import {MockBrandAsset} from "../src/mocks/MockBrandAsset.sol";
-import {MockUSDG} from "../src/mocks/MockUSDG.sol";
+import {MockAUSD} from "../src/mocks/MockAUSD.sol";
 import {MockSwapRouter} from "../src/mocks/MockSwapRouter.sol";
 import {MockAggregatorV3} from "../src/mocks/MockAggregatorV3.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -96,7 +96,7 @@ contract SecurityTest is ZenFixture {
     function test_crossChainReplay_rejected() public {
         PurchaseClaim memory c = _claim(alice, 2_000_00);
         bytes memory att = _sign(attesterPk, c);
-        vm.chainId(46630 + 1);
+        vm.chainId(block.chainid + 1);
         _expectRejected(ClaimStatus.BadAttestation);
         vm.prank(alice);
         registry.submitClaim(c, att);
@@ -150,13 +150,13 @@ contract SecurityTest is ZenFixture {
     // --- mocks can never reach production chains ------------------------------------
 
     function test_mocks_refuseProductionChains() public {
-        uint256[2] memory prod = [uint256(4663), 42161];
+        uint256[2] memory prod = [uint256(143), 1]; // Monad mainnet, Ethereum
         for (uint256 i; i < 2; i++) {
             vm.chainId(prod[i]);
             vm.expectRevert(MockBrandAsset.ProductionChain.selector);
             new MockBrandAsset("m", "m", owner);
-            vm.expectRevert(MockUSDG.ProductionChain.selector);
-            new MockUSDG();
+            vm.expectRevert(MockAUSD.ProductionChain.selector);
+            new MockAUSD();
             vm.expectRevert(MockSwapRouter.ProductionChain.selector);
             new MockSwapRouter();
             vm.expectRevert(MockAggregatorV3.ProductionChain.selector);

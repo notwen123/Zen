@@ -15,7 +15,7 @@ contract MockSwapRouter is ISwapRouter {
     error ProductionChain();
 
     constructor() {
-        if (block.chainid == 4663 || block.chainid == 42161) revert ProductionChain();
+        if (block.chainid == 143 || block.chainid == 1) revert ProductionChain();
     }
 
     function setRate(address tokenIn, address tokenOut, uint256 r) external {

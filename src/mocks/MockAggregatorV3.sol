@@ -13,7 +13,7 @@ contract MockAggregatorV3 is IAggregatorV3 {
     error ProductionChain();
 
     constructor(uint8 decimals_, int256 answer_) {
-        if (block.chainid == 4663 || block.chainid == 42161) revert ProductionChain();
+        if (block.chainid == 143 || block.chainid == 1) revert ProductionChain();
         _decimals = decimals_;
         _answer = answer_;
         _updatedAt = block.timestamp;
