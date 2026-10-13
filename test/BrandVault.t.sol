@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 
-contract BrandVaultTest is StockbackFixture {
+contract BrandVaultTest is ZenFixture {
     function test_metadata() public view {
         assertEq(nikeVault.asset(), address(mNKE));
         assertEq(nikeVault.brandId(), NIKE);
@@ -27,8 +27,19 @@ contract BrandVaultTest is StockbackFixture {
     }
 
     /// Rewarded users can always exit to the underlying asset, even with claims paused.
+    /// Settled equity deposited into the vault stays redeemable even with the registry paused.
+    function _settleIntoVault(address who) internal returns (uint256 shares) {
+        (, uint256 pos) = _submit(_claim(who, 2_000_00));
+        vm.warp(block.timestamp + FASHION_WINDOW);
+        conditional.settle(pos);
+        vm.startPrank(who);
+        mNKE.approve(address(nikeVault), 15e18);
+        shares = nikeVault.deposit(15e18, who);
+        vm.stopPrank();
+    }
+
     function test_rewardedUser_redeemsWhileRegistryPaused() public {
-        (, uint256 shares) = _submit(_claim(alice, 2_000_00));
+        uint256 shares = _settleIntoVault(alice);
         vm.prank(owner);
         registry.setPaused(true);
         vm.prank(alice);
@@ -38,7 +49,7 @@ contract BrandVaultTest is StockbackFixture {
     }
 
     function test_cannotRedeemOthersShares() public {
-        (, uint256 shares) = _submit(_claim(alice, 2_000_00));
+        uint256 shares = _settleIntoVault(alice);
         vm.prank(bob);
         vm.expectRevert();
         nikeVault.redeem(shares, bob, alice);

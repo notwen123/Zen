@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 import {PurchaseClaim, ClaimStatus} from "../src/PurchaseClaim.sol";
 import {ReceiptCommitmentRegistry} from "../src/ReceiptCommitmentRegistry.sol";
 import {RewardPolicy} from "../src/RewardPolicy.sol";
@@ -38,6 +38,15 @@ contract ReentrantAsset is ERC20 {
         _armed = true;
     }
 
+    /// Escrow moves the reward with `transfer`; hook it too.
+    function transfer(address t, uint256 a) public override returns (bool) {
+        if (_armed) {
+            _armed = false;
+            target.submitClaim(_c, "");
+        }
+        return super.transfer(t, a);
+    }
+
     function transferFrom(address f, address t, uint256 a) public override returns (bool) {
         if (_armed) {
             _armed = false;
@@ -47,14 +56,14 @@ contract ReentrantAsset is ERC20 {
     }
 }
 
-contract SecurityTest is StockbackFixture {
+contract SecurityTest is ZenFixture {
     // --- verifier authority is bounded -----------------------------------------------
 
     /// Worst case: owner key compromised and verifier replaced with one that accepts anything.
     /// Damage is still bounded by per-claim cap, daily caps and budget; existing users' shares
     /// are untouched because nothing can move assets out of a vault except the share holder.
     function test_compromisedVerifier_boundedByCapsAndBudget() public {
-        (, uint256 aliceShares) = _submit(_claim(alice, 2_000_00));
+        (, uint256 alicePos) = _submit(_claim(alice, 2_000_00));
 
         AlwaysTrueVerifier evilVerifier = new AlwaysTrueVerifier();
         vm.prank(owner);
@@ -67,15 +76,16 @@ contract SecurityTest is StockbackFixture {
             try registry.submitClaim(c, "") {} catch {}
         }
         assertEq(rewardPolicy.userIssued(NIKE, attacker, day), DAILY_USER_CAP, "capped at daily user cap");
-        assertEq(nikeVault.convertToAssets(nikeVault.balanceOf(attacker)), DAILY_USER_CAP);
-        assertEq(nikeVault.convertToAssets(aliceShares), 15e18, "honest shares untouched");
+        assertEq(conditional.escrowed(address(mNKE)), DAILY_USER_CAP + 15e18, "attacker escrow capped");
+        assertEq(_amt(alicePos), 15e18, "honest claim untouched");
+        assertEq(conditional.ownerOf(alicePos), alice);
     }
 
     function test_verifierAddress_cannotAllocateOrConsume() public {
         PurchaseClaim memory c = _claim(alice, 2_000_00);
         vm.startPrank(address(verifier));
         vm.expectRevert(RewardPool.NotRegistry.selector);
-        pool.allocate(NIKE, address(verifier), 1);
+        pool.allocate(NIKE, address(verifier), 1, uint64(block.timestamp));
         vm.expectRevert(RewardPolicy.NotRegistry.selector);
         rewardPolicy.consume(c);
         vm.stopPrank();
@@ -119,6 +129,7 @@ contract SecurityTest is StockbackFixture {
         vm.startPrank(owner);
         factory.createVault(EVIL, evil, "x", "x");
         _configureBrand(EVIL);
+        conditional.setCategory(EVIL, FASHION);
         registry.setVerifier(new AlwaysTrueVerifier());
         vm.stopPrank();
         evil.mint(address(this), 1_000e18);

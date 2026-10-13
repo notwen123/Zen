@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 import {PurchaseClaim, ClaimStatus} from "../src/PurchaseClaim.sol";
 import {BrandVault} from "../src/BrandVault.sol";
 import {MockBrandAsset} from "../src/mocks/MockBrandAsset.sol";
 
-/// @notice End-to-end: two brands, two users, preview -> submit -> portfolio -> exit.
-contract StockbackIntegrationTest is StockbackFixture {
+/// @notice End-to-end: two brands, two users, preview -> submit -> locked claim -> settle -> vault.
+contract ZenIntegrationTest is ZenFixture {
     MockBrandAsset mSBUX;
     BrandVault sbuxVault;
 
@@ -37,27 +37,37 @@ contract StockbackIntegrationTest is StockbackFixture {
         assertEq(uint8(s), uint8(ClaimStatus.Ok));
         assertEq(quoted, 3.375e18);
 
-        _submit(nike);
-        _submit(coffee);
-        _submit(_claim(bob, 10_000_00));
+        (, uint256 pNike) = _submit(nike);
+        (, uint256 pCoffee) = _submit(coffee);
+        (, uint256 pBob) = _submit(_claim(bob, 10_000_00));
 
-        // Portfolio: exposure per brand the user actually buys from.
-        assertEq(nikeVault.convertToAssets(nikeVault.balanceOf(alice)), 15e18);
-        assertEq(sbuxVault.convertToAssets(sbuxVault.balanceOf(alice)), 3.375e18);
-        assertEq(nikeVault.convertToAssets(nikeVault.balanceOf(bob)), 75e18);
-        assertEq(sbuxVault.balanceOf(bob), 0);
-
-        // Accounting: vault assets == rewards issued; pool budget reduced by the same.
-        assertEq(nikeVault.totalAssets(), 90e18);
+        // Every reward is a locked, conditional claim; categories set the unlock time.
+        assertEq(_amt(pNike), 15e18);
+        assertEq(_amt(pCoffee), 3.375e18);
+        assertEq(_amt(pBob), 75e18);
+        assertEq(conditional.claimOf(pCoffee).unlockAt, coffee.purchasedAt + 1 days, "food: 1-day window");
+        assertEq(conditional.claimOf(pNike).unlockAt, nike.purchasedAt + FASHION_WINDOW, "fashion: 30 days");
+        assertEq(conditional.escrowed(address(mNKE)), 90e18);
         assertEq(pool.budgetOf(NIKE), BUDGET - 90e18);
         assertEq(pool.budgetOf(SBUX), BUDGET - 3.375e18);
 
-        // Exit: shares redeem 1:1 for the underlying mock asset.
-        uint256 aliceShares = nikeVault.balanceOf(alice);
-        vm.prank(alice);
-        nikeVault.redeem(aliceShares, alice, alice);
-        assertEq(mNKE.balanceOf(alice), 15e18);
-        assertEq(nikeVault.convertToAssets(nikeVault.balanceOf(bob)), 75e18, "bob unaffected");
+        // Coffee unlocks first; settling is permissionless and pays the holder.
+        vm.warp(block.timestamp + 1 days);
+        vm.prank(bob);
+        conditional.settle(pCoffee);
+        assertEq(mSBUX.balanceOf(alice), 3.375e18);
+
+        // After the fashion window, settled equity can go into the admin-less brand vault.
+        vm.warp(block.timestamp + FASHION_WINDOW);
+        conditional.settle(pNike);
+        conditional.settle(pBob);
+        assertEq(conditional.escrowed(address(mNKE)), 0);
+        vm.startPrank(alice);
+        mNKE.approve(address(nikeVault), 15e18);
+        uint256 shares = nikeVault.deposit(15e18, alice);
+        assertEq(nikeVault.redeem(shares, alice, alice), 15e18);
+        vm.stopPrank();
+        assertEq(mNKE.balanceOf(bob), 75e18, "bob unaffected");
     }
 
     function test_sameReceiptCannotCrossBrands() public {
@@ -78,6 +88,7 @@ contract StockbackIntegrationTest is StockbackFixture {
             }
             vm.warp(block.timestamp + 1 days);
         }
-        assertEq(nikeVault.convertToAssets(nikeVault.balanceOf(alice)), 5 * DAILY_USER_CAP);
+        assertEq(conditional.balanceOf(alice), 15);
+        assertEq(conditional.escrowed(address(mNKE)), 5 * DAILY_USER_CAP);
     }
 }

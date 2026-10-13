@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 import {USDGRewardAdapter} from "../src/USDGRewardAdapter.sol";
 import {MockUSDG} from "../src/mocks/MockUSDG.sol";
 import {MockSwapRouter} from "../src/mocks/MockSwapRouter.sol";
@@ -10,7 +10,7 @@ import {ISwapRouter} from "../src/interfaces/ISwapRouter.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract USDGRewardAdapterTest is StockbackFixture {
+contract USDGRewardAdapterTest is ZenFixture {
     USDGRewardAdapter adapter;
     MockUSDG usdg;
     MockSwapRouter router;
@@ -48,8 +48,8 @@ contract USDGRewardAdapterTest is StockbackFixture {
         pool.withdrawBudget(NIKE, BUDGET, owner);
         vm.prank(sponsor);
         adapter.fundWithUSDG(NIKE, 100e6); // 50 mNKE budget
-        (, uint256 shares) = _submit(_claim(alice, 2_000_00));
-        assertEq(nikeVault.convertToAssets(shares), 15e18);
+        (, uint256 pos) = _submit(_claim(alice, 2_000_00));
+        assertEq(_amt(pos), 15e18);
         assertEq(pool.budgetOf(NIKE), 35e18);
     }
 

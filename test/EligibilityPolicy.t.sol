@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 import {PurchaseClaim, ClaimStatus} from "../src/PurchaseClaim.sol";
 import {EligibilityPolicy} from "../src/EligibilityPolicy.sol";
 import {IJurisdictionPolicy} from "../src/interfaces/IJurisdictionPolicy.sol";
@@ -20,7 +20,7 @@ contract BlocklistJurisdiction is IJurisdictionPolicy {
     }
 }
 
-contract EligibilityPolicyTest is StockbackFixture {
+contract EligibilityPolicyTest is ZenFixture {
     function _status(PurchaseClaim memory c) internal view returns (ClaimStatus) {
         return eligibility.check(c);
     }

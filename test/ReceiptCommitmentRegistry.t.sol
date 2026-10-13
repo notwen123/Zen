@@ -1,23 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 import {PurchaseClaim, ClaimStatus, ClaimLib} from "../src/PurchaseClaim.sol";
 import {ReceiptCommitmentRegistry} from "../src/ReceiptCommitmentRegistry.sol";
 import {IReceiptVerifier} from "../src/interfaces/IReceiptVerifier.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ReceiptCommitmentRegistryTest is StockbackFixture {
+contract ReceiptCommitmentRegistryTest is ZenFixture {
     // 1. valid claim accepted -------------------------------------------------
 
-    function test_validClaim_mintsVaultShares() public {
+    function test_validClaim_mintsLockedConditionalClaim() public {
         PurchaseClaim memory c = _claim(alice, 2_000_00); // Rs 2,000
-        (bytes32 id, uint256 shares) = _submit(c);
+        (bytes32 id, uint256 pos) = _submit(c);
 
         assertEq(id, registry.claimId(c));
         assertEq(registry.claimOfNullifier(registry.nullifierOf(c)), id);
-        assertEq(nikeVault.balanceOf(alice), shares);
-        assertEq(nikeVault.convertToAssets(shares), 15e18, "0.75% of Rs 2,000 = 15 mNKE");
+        assertEq(conditional.ownerOf(pos), alice);
+        assertEq(_amt(pos), 15e18, "0.75% of Rs 2,000 = 15 mNKE, escrowed");
+        assertEq(conditional.claimOf(pos).unlockAt, c.purchasedAt + FASHION_WINDOW);
+        assertEq(mNKE.balanceOf(address(conditional)), 15e18);
+        assertEq(nikeVault.balanceOf(alice), 0, "nothing paid out before the return window");
         assertEq(pool.budgetOf(NIKE), BUDGET - 15e18);
     }
 
@@ -30,7 +33,7 @@ contract ReceiptCommitmentRegistryTest is StockbackFixture {
         vm.expectEmit(address(registry));
         emit ReceiptCommitmentRegistry.PurchaseCommitted(id, n, alice, NIKE, c.merchantId, c.amount, INR);
         vm.expectEmit(address(registry));
-        emit ReceiptCommitmentRegistry.RewardAllocated(id, NIKE, alice, 15e18, 15e18 * 1e6);
+        emit ReceiptCommitmentRegistry.RewardAllocated(id, NIKE, alice, 15e18, 1);
         vm.prank(alice);
         registry.submitClaim(c, att);
     }

@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 import {PurchaseClaim, ClaimStatus} from "../src/PurchaseClaim.sol";
 import {RewardPolicy} from "../src/RewardPolicy.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract RewardPolicyTest is StockbackFixture {
+contract RewardPolicyTest is ZenFixture {
     function _quote(PurchaseClaim memory c) internal view returns (ClaimStatus s, uint256 r) {
         return rewardPolicy.quote(c);
     }

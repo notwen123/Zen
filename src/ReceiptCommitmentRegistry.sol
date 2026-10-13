@@ -11,8 +11,9 @@ import {IRewardPolicy} from "./interfaces/IRewardPolicy.sol";
 import {IRewardPool} from "./interfaces/IRewardPool.sol";
 
 /// @title ReceiptCommitmentRegistry
-/// @notice Entry point of STOCKBACK: attested purchase claim -> commitment + nullifier ->
-///         verification -> eligibility -> reward -> brand-vault shares, in one transaction.
+/// @notice Entry point of Zen: attested purchase claim -> commitment + nullifier ->
+///         verification -> eligibility -> reward -> a ConditionalClaim on tokenized equity that
+///         stays locked until the purchase's return window closes, all in one transaction.
 /// @dev Only this contract may consume reward caps or allocate pool budget. The verifier
 ///      only answers yes/no. Stored data is hashes only - no PII.
 contract ReceiptCommitmentRegistry is EIP712, Ownable, ReentrancyGuard {
@@ -41,7 +42,7 @@ contract ReceiptCommitmentRegistry is EIP712, Ownable, ReentrancyGuard {
         bytes3 currency
     );
     event RewardAllocated(
-        bytes32 indexed claimId, bytes32 indexed brandId, address indexed claimant, uint256 assets, uint256 shares
+        bytes32 indexed claimId, bytes32 indexed brandId, address indexed claimant, uint256 assets, uint256 positionId
     );
     event VerifierUpdated(address indexed verifier);
     event EligibilityPolicyUpdated(address indexed policy);
@@ -54,7 +55,7 @@ contract ReceiptCommitmentRegistry is EIP712, Ownable, ReentrancyGuard {
         IEligibilityPolicy eligibility_,
         IRewardPolicy rewardPolicy_,
         IRewardPool pool_
-    ) EIP712("STOCKBACK", "1") Ownable(owner_) {
+    ) EIP712("Zen", "1") Ownable(owner_) {
         if (address(pool_) == address(0)) revert ZeroAddress();
         pool = pool_;
         _setVerifier(verifier_);
@@ -114,7 +115,7 @@ contract ReceiptCommitmentRegistry is EIP712, Ownable, ReentrancyGuard {
     function submitClaim(PurchaseClaim calldata c, bytes calldata attestation)
         external
         nonReentrant
-        returns (bytes32 id, uint256 shares)
+        returns (bytes32 id, uint256 positionId)
     {
         if (paused) revert ClaimsPaused();
         if (c.claimant != msg.sender) revert ClaimRejected(ClaimStatus.WrongClaimant);
@@ -132,10 +133,11 @@ contract ReceiptCommitmentRegistry is EIP712, Ownable, ReentrancyGuard {
         claimOfNullifier[n] = id;
         emit PurchaseCommitted(id, n, c.claimant, c.brandId, c.merchantId, c.amount, c.currency);
 
-        // Policy records cap usage (reverts if caps moved), pool deposits into the brand vault.
+        // Policy records cap usage (reverts if caps moved); pool escrows the reward and mints a
+        // ConditionalClaim position (an ERC-721 id) to the claimant.
         reward = rewardPolicy.consume(c);
-        shares = pool.allocate(c.brandId, c.claimant, reward);
-        emit RewardAllocated(id, c.brandId, c.claimant, reward, shares);
+        positionId = pool.allocate(c.brandId, c.claimant, reward, c.purchasedAt);
+        emit RewardAllocated(id, c.brandId, c.claimant, reward, positionId);
     }
 
     // ---------------------------------------------------------------- internal

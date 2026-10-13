@@ -11,10 +11,15 @@ import {RewardPool} from "../../src/RewardPool.sol";
 import {BrandVault} from "../../src/BrandVault.sol";
 import {BrandVaultFactory} from "../../src/BrandVaultFactory.sol";
 import {MockBrandAsset} from "../../src/mocks/MockBrandAsset.sol";
+import {ConditionalClaim} from "../../src/ConditionalClaim.sol";
+import {VoidOracle} from "../../src/VoidOracle.sol";
+import {InstantExitPool} from "../../src/InstantExitPool.sol";
+import {IConditionalClaim} from "../../src/interfaces/IConditionalClaim.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/// @notice Deploys the full STOCKBACK stack with an ECDSA attester, one brand (NIKE) configured.
-abstract contract StockbackFixture is Test {
+/// @notice Deploys the full Zen stack with an ECDSA attester, one brand (NIKE, category FASHION)
+///         configured, a VoidOracle with one refund attester, and an InstantExitPool for mNKE.
+abstract contract ZenFixture is Test {
     bytes32 internal constant NIKE = bytes32("NIKE");
     bytes32 internal constant SBUX = bytes32("SBUX");
     bytes3 internal constant INR = bytes3("INR");
@@ -26,12 +31,26 @@ abstract contract StockbackFixture is Test {
     uint128 internal constant DAILY_BRAND_CAP = 10_000e18;
     uint256 internal constant BUDGET = 1_000_000e18;
 
+    uint8 internal constant FASHION = 1;
+    uint8 internal constant ELECTRONICS = 2;
+    uint8 internal constant FOOD = 3;
+    uint64 internal constant FASHION_WINDOW = 30 days;
+    uint16 internal constant FASHION_P_REFUND = 2_500; // illustrative
+    uint64 internal constant MIN_HOLD = 1 hours;
+    uint16 internal constant TIME_VALUE_BPS = 1_000; // 10% a year
+    uint16 internal constant LP_FEE_BPS = 100; // 1%
+    uint16 internal constant RISK_SLOPE_BPS = 10_000; // 100% void ratio doubles risk
+    uint256 internal constant LP_SEED = 10_000e18;
+
     address internal owner = makeAddr("owner");
     address internal sponsor = makeAddr("sponsor");
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
     uint256 internal attesterPk = 0xA77E57;
     address internal attester;
+    uint256 internal refundPk = 0x8EF0D;
+    address internal refundAttester;
+    address internal lp = makeAddr("lp");
 
     ReceiptCommitmentRegistry internal registry;
     ECDSAAttestationVerifier internal verifier;
@@ -41,12 +60,16 @@ abstract contract StockbackFixture is Test {
     BrandVaultFactory internal factory;
     MockBrandAsset internal mNKE;
     BrandVault internal nikeVault;
+    ConditionalClaim internal conditional;
+    VoidOracle internal voidOracle;
+    InstantExitPool internal exitPool;
 
     uint256 internal receiptNonce;
 
     function setUp() public virtual {
         vm.warp(1_790_000_000);
         attester = vm.addr(attesterPk);
+        refundAttester = vm.addr(refundPk);
 
         vm.startPrank(owner);
         factory = new BrandVaultFactory(owner);
@@ -59,10 +82,42 @@ abstract contract StockbackFixture is Test {
         pool.setRegistry(address(registry));
         verifier.setAttester(attester, true);
 
+        conditional = new ConditionalClaim(owner);
+        voidOracle = new VoidOracle(owner, conditional);
+        conditional.wire(address(pool), address(voidOracle));
+        pool.setConditional(conditional);
+        voidOracle.setAttester(refundAttester, true);
+        conditional.setReturnWindow(FASHION, FASHION_WINDOW, false);
+        conditional.setReturnWindow(ELECTRONICS, 14 days, false);
+        conditional.setReturnWindow(FOOD, 1 days, false);
+        conditional.setCategory(NIKE, FASHION);
+        conditional.setCategory(SBUX, FOOD);
+
         mNKE = new MockBrandAsset("Mock Nike Exposure (TEST)", "mNKE", owner);
         nikeVault = BrandVault(factory.createVault(NIKE, IERC20(address(mNKE)), "STOCKBACK mNKE Vault", "sbNKE"));
         _configureBrand(NIKE);
         mNKE.mint(sponsor, BUDGET);
+
+        exitPool = new InstantExitPool(
+            owner,
+            conditional,
+            IERC20(address(mNKE)),
+            "Zen Exit LP mNKE",
+            "zxNKE",
+            TIME_VALUE_BPS,
+            LP_FEE_BPS,
+            RISK_SLOPE_BPS
+        );
+        exitPool.setCategoryParams(
+            FASHION,
+            InstantExitPool.CategoryParams({pRefundBps: FASHION_P_REFUND, minHoldSeconds: MIN_HOLD, enabled: true})
+        );
+        mNKE.mint(lp, LP_SEED);
+        vm.stopPrank();
+
+        vm.startPrank(lp);
+        mNKE.approve(address(exitPool), LP_SEED);
+        exitPool.deposit(LP_SEED, lp);
         vm.stopPrank();
 
         vm.startPrank(sponsor);
@@ -110,6 +165,25 @@ abstract contract StockbackFixture is Test {
     function _sign(uint256 pk, PurchaseClaim memory c) internal view returns (bytes memory) {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(pk, registry.claimDigest(c));
         return abi.encodePacked(r, s, v);
+    }
+
+    /// @dev Escrowed equity of a conditional claim position.
+    function _amt(uint256 positionId) internal view returns (uint256) {
+        return conditional.claimOf(positionId).amount;
+    }
+
+    function _signRefund(uint256 pk, uint256 claimId, bytes32 ref, uint64 deadline)
+        internal
+        view
+        returns (bytes memory)
+    {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(pk, voidOracle.refundDigest(claimId, ref, deadline));
+        return abi.encodePacked(r, s, v);
+    }
+
+    function _void(uint256 claimId, bytes32 ref) internal {
+        uint64 dl = uint64(block.timestamp + 1 hours);
+        voidOracle.voidWithAttestation(claimId, ref, dl, _signRefund(refundPk, claimId, ref, dl));
     }
 
     function _submit(PurchaseClaim memory c) internal returns (bytes32 id, uint256 shares) {

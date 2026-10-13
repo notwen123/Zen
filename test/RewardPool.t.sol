@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 import {PurchaseClaim, ClaimStatus} from "../src/PurchaseClaim.sol";
 import {RewardPool} from "../src/RewardPool.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract RewardPoolTest is StockbackFixture {
+contract RewardPoolTest is ZenFixture {
     function test_fund_anySponsor() public {
         vm.prank(owner);
         mNKE.mint(bob, 5e18);
@@ -27,7 +27,7 @@ contract RewardPoolTest is StockbackFixture {
     function test_allocate_onlyRegistry() public {
         vm.prank(owner); // not even the owner
         vm.expectRevert(RewardPool.NotRegistry.selector);
-        pool.allocate(NIKE, owner, 1);
+        pool.allocate(NIKE, owner, 1, uint64(block.timestamp));
     }
 
     function test_donation_doesNotInflateBudget() public {
@@ -56,18 +56,19 @@ contract RewardPoolTest is StockbackFixture {
         assertEq(pool.budgetOf(NIKE), 0);
     }
 
-    // 17. emergency: owner can pull unallocated budget, never user shares.
-    function test_emergencyWithdrawBudget_leavesUserSharesIntact() public {
-        (, uint256 shares) = _submit(_claim(alice, 2_000_00));
+    // 17. emergency: owner can pull unallocated budget, never escrowed claims.
+    function test_emergencyWithdrawBudget_leavesClaimsIntact() public {
+        (, uint256 pos) = _submit(_claim(alice, 2_000_00));
         vm.startPrank(owner);
         registry.setPaused(true);
         pool.withdrawBudget(NIKE, pool.budgetOf(NIKE), owner);
         vm.stopPrank();
         assertEq(pool.budgetOf(NIKE), 0);
         assertEq(mNKE.balanceOf(address(pool)), 0);
-        assertEq(nikeVault.totalAssets(), 15e18);
-        vm.prank(alice);
-        assertEq(nikeVault.redeem(shares, alice, alice), 15e18);
+        assertEq(conditional.escrowed(address(mNKE)), 15e18);
+        vm.warp(block.timestamp + FASHION_WINDOW);
+        conditional.settle(pos);
+        assertEq(mNKE.balanceOf(alice), 15e18);
     }
 
     function test_withdrawBudget_guards() public {

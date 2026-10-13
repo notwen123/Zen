@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {StockbackFixture} from "./utils/StockbackFixture.sol";
+import {ZenFixture} from "./utils/ZenFixture.sol";
 import {BrandVaultFactory} from "../src/BrandVaultFactory.sol";
 import {BrandVault} from "../src/BrandVault.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract BrandVaultFactoryTest is StockbackFixture {
+contract BrandVaultFactoryTest is ZenFixture {
     function test_create_registersAndEmits() public {
         vm.prank(owner);
         address v = factory.createVault(SBUX, mNKE, "sbSBUX", "sbSBUX");
