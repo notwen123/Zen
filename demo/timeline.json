@@ -1,0 +1,290 @@
+{
+ "fps": 30,
+ "duration": 95.412,
+ "segments": [
+  {
+   "kind": "intro",
+   "dur": 6,
+   "f0": 0,
+   "f1": 6
+  },
+  {
+   "kind": "take",
+   "t0": 0,
+   "url": "/",
+   "dur": 48.79299998283386,
+   "f0": 6,
+   "f1": 54.793
+  },
+  {
+   "kind": "proof",
+   "img": "proof-cash.png",
+   "tx": "https://testnet.monadvision.com/tx/0xf7ab614038f66bed1b9ed52dc3fd364ec186d976221e5d9e9fe33895a3bdeec4",
+   "dur": 5.6,
+   "f0": 54.793,
+   "f1": 60.393
+  },
+  {
+   "kind": "take",
+   "t0": 49.613999891281125,
+   "dur": 13.57899994850159,
+   "f0": 60.393,
+   "f1": 73.972
+  },
+  {
+   "kind": "envio",
+   "dur": 5.8,
+   "f0": 73.972,
+   "f1": 79.772
+  },
+  {
+   "kind": "take",
+   "t0": 63.192999839782715,
+   "dur": 8.140000104904175,
+   "f0": 79.772,
+   "f1": 87.912
+  },
+  {
+   "kind": "outro",
+   "dur": 7.5,
+   "f0": 87.912,
+   "f1": 95.412
+  }
+ ],
+ "vo": [
+  [
+   "intro1",
+   0.45
+  ],
+  [
+   "intro2",
+   4.5
+  ],
+  [
+   "merchant",
+   14.425
+  ],
+  [
+   "signin",
+   22.831
+  ],
+  [
+   "locked",
+   32.556
+  ],
+  [
+   "claims",
+   43.436
+  ],
+  [
+   "quote",
+   46.477
+  ],
+  [
+   "proofcash",
+   55.293
+  ],
+  [
+   "refund",
+   60.693
+  ],
+  [
+   "pools",
+   69.345
+  ],
+  [
+   "envio",
+   74.572
+  ],
+  [
+   "locker",
+   80.172
+  ],
+  [
+   "outro",
+   89.312
+  ]
+ ],
+ "badges": [
+  {
+   "f0": 6.95,
+   "f1": 13.82,
+   "kind": "live",
+   "tag": "Live",
+   "text": "zen-monad.pages.dev · Monad testnet"
+  },
+  {
+   "f0": 14.53,
+   "f1": 22.43,
+   "kind": "info",
+   "tag": "Merchant-signed",
+   "text": "Ed25519 receipt · simulated merchant"
+  },
+  {
+   "f0": 24.78,
+   "f1": 32.76,
+   "kind": "bounty",
+   "tag": "Mera · UX",
+   "text": "Passkey account. No wallet, no seed phrase"
+  },
+  {
+   "f0": 26.97,
+   "f1": 32.76,
+   "kind": "info",
+   "tag": "Auto-funded",
+   "text": "Test MON from the faucet, server-side"
+  },
+  {
+   "f0": 37.29,
+   "f1": 42.94,
+   "kind": "track",
+   "tag": "Finance #12",
+   "text": "Equity locked until the return window closes"
+  },
+  {
+   "f0": 43.54,
+   "f1": 46.38,
+   "kind": "info",
+   "tag": "Return-window seal",
+   "text": "Stamps when the equity is free to settle"
+  },
+  {
+   "f0": 46.88,
+   "f1": 54.59,
+   "kind": "track",
+   "tag": "Finance #12",
+   "text": "InstantExitPool prices refund risk · ERC-4626"
+  },
+  {
+   "f0": 60.89,
+   "f1": 68.89,
+   "kind": "track",
+   "tag": "Finance #12",
+   "text": "VoidOracle: signed refund → claim voided"
+  },
+  {
+   "f0": 69.49,
+   "f1": 79.37,
+   "kind": "track",
+   "tag": "Onchain P&L",
+   "text": "Realized loss booked by the pool"
+  },
+  {
+   "f0": 80.07,
+   "f1": 87.61,
+   "kind": "bounty",
+   "tag": "Mera · PRF",
+   "text": "Second key (HKDF) → AES-GCM receipt locker"
+  }
+ ],
+ "clicks": [
+  16.144999980926514,
+  18.22000002861023,
+  24.88800024986267,
+  31.87000012397766,
+  35.50100016593933,
+  42.13100004196167,
+  50.698999881744385,
+  64.81800014305115,
+  81.82799999427796,
+  83.89300005149842
+ ],
+ "typing": [
+  [
+   16.233999967575073,
+   16.730000019073486
+  ]
+ ],
+ "hits": {
+  "claimed": 37.58800005912781,
+  "cashed": 52.79299998283386,
+  "voided": 66.90500003623963
+ },
+ "urls": [
+  [
+   0,
+   "/"
+  ],
+  [
+   8.125,
+   "/merchant"
+  ],
+  [
+   16.731000185012817,
+   "/app/scan"
+  ],
+  [
+   37.236000061035156,
+   "/app/portfolio"
+  ],
+  [
+   49.613999891281125,
+   "/merchant"
+  ],
+  [
+   58.41599988937378,
+   "/app/lp"
+  ],
+  [
+   63.192999839782715,
+   "/app/locker"
+  ]
+ ],
+ "envio": {
+  "source": "Envio HyperSync · https://10143.hypersync.xyz",
+  "chain": "Monad testnet 10143",
+  "claimId": 32,
+  "queryMs": 3,
+  "archiveHeight": 70807918,
+  "events": [
+   {
+    "event": "Transfer",
+    "contract": "ConditionalClaim",
+    "block": 70807307,
+    "tx": "0x7732bd36d540efbc36d178007460d88cb1b35d944621f8c9a03782db3b3178ed"
+   },
+   {
+    "event": "ClaimMinted",
+    "contract": "ConditionalClaim",
+    "block": 70807307,
+    "tx": "0x7732bd36d540efbc36d178007460d88cb1b35d944621f8c9a03782db3b3178ed"
+   },
+   {
+    "event": "Transfer",
+    "contract": "ConditionalClaim",
+    "block": 70807531,
+    "tx": "0xf7ab614038f66bed1b9ed52dc3fd364ec186d976221e5d9e9fe33895a3bdeec4"
+   },
+   {
+    "event": "ClaimBought",
+    "contract": "InstantExitPool mNKE",
+    "block": 70807531,
+    "tx": "0xf7ab614038f66bed1b9ed52dc3fd364ec186d976221e5d9e9fe33895a3bdeec4"
+   },
+   {
+    "event": "RefundAccepted",
+    "contract": "VoidOracle",
+    "block": 70807612,
+    "tx": "0x627f0213ff1bcd0168b2d9c3445969564d026076f3c9cf1eba35add3935df22e"
+   },
+   {
+    "event": "ClaimVoided",
+    "contract": "ConditionalClaim",
+    "block": 70807612,
+    "tx": "0x627f0213ff1bcd0168b2d9c3445969564d026076f3c9cf1eba35add3935df22e"
+   },
+   {
+    "event": "ClaimResolved",
+    "contract": "InstantExitPool mNKE",
+    "block": 70807612,
+    "tx": "0x627f0213ff1bcd0168b2d9c3445969564d026076f3c9cf1eba35add3935df22e"
+   }
+  ]
+ },
+ "proof": {
+  "claimTx": "https://testnet.monadvision.com/tx/0x7732bd36d540efbc36d178007460d88cb1b35d944621f8c9a03782db3b3178ed",
+  "claimId": "32",
+  "cashTx": "https://testnet.monadvision.com/tx/0xf7ab614038f66bed1b9ed52dc3fd364ec186d976221e5d9e9fe33895a3bdeec4",
+  "refundTx": "https://testnet.monadvision.com/tx/0x627f0213ff1bcd0168b2d9c3445969564d026076f3c9cf1eba35add3935df22e"
+ }
+}

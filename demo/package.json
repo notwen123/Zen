@@ -1,0 +1,1 @@
+{ "name": "zen-demo-film", "private": true, "type": "module", "dependencies": { "playwright-core": "latest" } }

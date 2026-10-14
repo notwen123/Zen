@@ -1,0 +1,8 @@
+node_modules/
+rec/
+frames/
+out/
+audio/
+data.js
+hypersync-raw.json
+proof-cash-small.jpg

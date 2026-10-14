@@ -1,0 +1,51 @@
+{
+ "source": "Envio HyperSync \u00b7 https://10143.hypersync.xyz",
+ "chain": "Monad testnet 10143",
+ "claimId": 32,
+ "queryMs": 3,
+ "archiveHeight": 70807918,
+ "events": [
+  {
+   "event": "Transfer",
+   "contract": "ConditionalClaim",
+   "block": 70807307,
+   "tx": "0x7732bd36d540efbc36d178007460d88cb1b35d944621f8c9a03782db3b3178ed"
+  },
+  {
+   "event": "ClaimMinted",
+   "contract": "ConditionalClaim",
+   "block": 70807307,
+   "tx": "0x7732bd36d540efbc36d178007460d88cb1b35d944621f8c9a03782db3b3178ed"
+  },
+  {
+   "event": "Transfer",
+   "contract": "ConditionalClaim",
+   "block": 70807531,
+   "tx": "0xf7ab614038f66bed1b9ed52dc3fd364ec186d976221e5d9e9fe33895a3bdeec4"
+  },
+  {
+   "event": "ClaimBought",
+   "contract": "InstantExitPool mNKE",
+   "block": 70807531,
+   "tx": "0xf7ab614038f66bed1b9ed52dc3fd364ec186d976221e5d9e9fe33895a3bdeec4"
+  },
+  {
+   "event": "RefundAccepted",
+   "contract": "VoidOracle",
+   "block": 70807612,
+   "tx": "0x627f0213ff1bcd0168b2d9c3445969564d026076f3c9cf1eba35add3935df22e"
+  },
+  {
+   "event": "ClaimVoided",
+   "contract": "ConditionalClaim",
+   "block": 70807612,
+   "tx": "0x627f0213ff1bcd0168b2d9c3445969564d026076f3c9cf1eba35add3935df22e"
+  },
+  {
+   "event": "ClaimResolved",
+   "contract": "InstantExitPool mNKE",
+   "block": 70807612,
+   "tx": "0x627f0213ff1bcd0168b2d9c3445969564d026076f3c9cf1eba35add3935df22e"
+  }
+ ]
+}

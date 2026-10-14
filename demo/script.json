@@ -1,0 +1,19 @@
+{
+  "voice": "af_heart",
+  "speed": 1.08,
+  "lines": [
+    { "id": "intro1", "text": "Stock-back rewards get paid on purchases that can still be refunded." },
+    { "id": "intro2", "text": "Zen makes every reward a locked equity claim, and builds the market that prices the refund risk. Live on Monad." },
+    { "id": "merchant", "text": "A merchant issues a signed receipt." },
+    { "id": "signin", "text": "The shopper signs up with a passkey. No wallet, no seed phrase. Mera derives a Monad account, funded in seconds." },
+    { "id": "locked", "text": "The signature checks out, and the reward is minted as a conditional claim: equity in escrow until the return window closes." },
+    { "id": "claims", "text": "The seal fills as the window runs." },
+    { "id": "quote", "text": "Don't want to wait? Cash out now. The pool prices the refund risk and pays on the spot." },
+    { "id": "proofcash", "text": "One transaction on Monad. The shopper is paid, and the pool takes the claim." },
+    { "id": "refund", "text": "Now the item comes back. The merchant signs a refund, the claim is voided, and the equity returns to the brand." },
+    { "id": "pools", "text": "The pool books the loss it priced in. Consumer refund risk, traded onchain." },
+    { "id": "envio", "text": "Every event streams through Envio HyperSync, in milliseconds." },
+    { "id": "locker", "text": "The same passkey derives a second key that encrypts your receipts. Only you can open your proof of purchase." },
+    { "id": "outro", "text": "Zen. Every stock-back reward, settled on Monad." }
+  ]
+}
